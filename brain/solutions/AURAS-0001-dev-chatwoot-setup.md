@@ -127,3 +127,39 @@ Order messages by `id` — no cross-message ordering guarantee (`AURAI-0002` §2
 - Chatter provisioning (real agents) = **O6**; not needed to unblock `AURAT-0004`.
 - This prepares the desk only; wiring the BFF against it is `AURAT-0004`
   (contact/conversation mapping) → `AURAT-0005` (messaging + webhook).
+
+## Actual dev run — 2026-07-11 (faster prebuilt path, use this)
+
+The source build (dev compose) is slow/heavy and hit a build-order snag; the
+**prebuilt image** is far faster (pull only) and was used instead. What is
+actually running on this machine (arm64):
+
+- **Images:** `chatwoot/chatwoot:v4.15.1` (arm64 native) + `pgvector/pgvector:pg16`
+  + `redis:alpine`. No source build.
+- **Override compose:** `chatwoot-manor/docker-compose.aura-cw.yml` (compose
+  project `aura-cw-dev`). postgres/redis are **internal-only** (host 5432/6379 were
+  taken); **rails is on host `3001`** (host 3000 was taken by another dev server);
+  empty postgres password → `POSTGRES_HOST_AUTH_METHOD=trust`; `RAILS_ENV=production`;
+  `POSTGRES_HOST=postgres` + `REDIS_URL=redis://redis:6379` override the `.env`.
+- **Provisioning:** `chatwoot-manor/chatwoot-provision.rb` (idempotent). Gotcha:
+  Chatwoot's User password policy needs an uppercase **and** a special char (a
+  plain hex string is rejected).
+- **Creds captured (gitignored):** `aura-bff-manor/project/manor/master/aura-bff/.env.chatwoot.dev`.
+  Chatwoot base URL here is **`:3001`**, not `:3000`.
+- **Validated end-to-end:** `GET /api/v1/accounts/1/conversations` with the
+  service-user token → **200**; inbox identifier resolves → **200**.
+
+Management:
+
+```bash
+CF=chatwoot-manor/docker-compose.aura-cw.yml
+docker compose -f "$CF" ps             # status
+docker compose -f "$CF" up -d          # start (restart: unless-stopped survives reboots)
+docker compose -f "$CF" down           # stop (keeps volumes/data; add -v to wipe)
+docker compose -f "$CF" logs -f rails  # tail rails
+```
+
+Dashboard: `http://localhost:3001` (`ENABLE_ACCOUNT_SIGNUP=true`). The service User
+`bff@aura.local` is an admin of account 1 but its password is random — create a
+human login (self-signup joins a *new* account; to answer on the Aura inbox add a
+user to **account 1** via console) to act as a chatter.
