@@ -23,7 +23,7 @@ on behind a flag.
 | AURAF-0007-005 | dev  | ✓ | ✓ | ✗ | ✗ | ✗ | Retire the in-memory chat simulation (canned replies / 1.5s timers) |
 | AURAF-0007-006 | spec | ✓ | — | ✗ | ✗ |   | Book a paid session as a fixed minute-block ("Book now"), prepaid from the wallet, with red start/finish markers |
 | AURAF-0007-007 | spec | ✓ | — | ✗ | ✗ |   | Near the end, extend / book another block; end a session early (block non-refundable) |
-| AURAF-0007-008 | spec | ✓ | — | ✗ | ✗ |   | Top up and see the USD wallet balance (wire the existing Top Up sheet to the real wallet) |
+| AURAF-0007-008 | spec | ✓ | — | ✗ | ✓ |   | Top up and see the USD wallet balance (wire the existing Top Up sheet to the real wallet) |
 
 Rows 006–008 ship behind the `billing_enabled` flag (`AURAD-0002`); **v1 launches
 with 001–005 only (free chat)** — owner-ratified 2026-07-09 — enabling paid
@@ -83,3 +83,10 @@ sessions later with no migration.
   `billing_enabled` flag **AURAT-0007** wallet-and-topup and **AURAT-0008**
   paid-sessions. Dependency chain: 0004 → 0005 → 0006; 0004 → 0007;
   {0005,0006,0007} → 0008.
+- **AURAT-0007 BE side (2026-07-11):** wallet + append-only ledger in the BFF
+  Postgres (`wallets` / `ledger_entries`, signed cents, `balance == Σ ledger`
+  transactional invariant), `GET /v1/wallet`, idempotent stubbed
+  `POST /v1/wallet/top-ups` (PSP pending; refused in production), all behind
+  `BILLING_ENABLED=false` (routes 404). Item 008's BE ✓ = this API; the App
+  column stays for the Top Up sheet wiring (app manor, contract in
+  `src/contracts/wallet.ts` → `@aura/contracts`).
