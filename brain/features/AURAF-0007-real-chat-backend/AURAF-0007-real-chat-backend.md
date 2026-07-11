@@ -16,9 +16,9 @@ on behind a flag.
 
 | # | Src | Own | App | UI | BE | Del | Item |
 |---|-----|-----|-----|----|----|-----|------|
-| AURAF-0007-001 | spec | ✓ | ✓ | ✗ | ✗ |   | Message an advisor and reach a real human chatter |
-| AURAF-0007-002 | spec | ✓ | ✓ | ✗ | ✗ |   | Get the chatter's real reply live, and as a push when the app is backgrounded |
-| AURAF-0007-003 | spec | ✓ | ✓ | ✗ | ✗ |   | Chat history persists across restarts and devices (one durable thread per advisor) |
+| AURAF-0007-001 | spec | ✓ | ✓ | ✗ | ✓ |   | Message an advisor and reach a real human chatter |
+| AURAF-0007-002 | spec | ✓ | ✓ | ✗ | ✓ |   | Get the chatter's real reply live, and as a push when the app is backgrounded |
+| AURAF-0007-003 | spec | ✓ | ✓ | ✗ | ✓ |   | Chat history persists across restarts and devices (one durable thread per advisor) |
 | AURAF-0007-004 | spec | ✓ | ✓ | ✗ | ✗ |   | Start a free chat from the advisor profile; see persona-level presence + typing |
 | AURAF-0007-005 | dev  | ✓ | ✓ | ✗ | ✗ | ✗ | Retire the in-memory chat simulation (canned replies / 1.5s timers) |
 | AURAF-0007-006 | spec | ✓ | — | ✗ | ✗ |   | Book a paid session as a fixed minute-block ("Book now"), prepaid from the wallet, with red start/finish markers |
@@ -78,7 +78,12 @@ sessions later with no migration.
 - **Cut into `AURAT` tasks (2026-07-10, see `brain/tasks/`):** v1 free chat =
   **AURAT-0004** bff-foundation (**done 2026-07-11** — NestJS/Prisma 7
   foundation, Firebase guard, idempotent Chatwoot provisioning, on `develop`
-  @ `24e6727`) → **AURAT-0005** messaging-and-delivery →
+  @ `24e6727`) → **AURAT-0005** messaging-and-delivery (**done 2026-07-11** —
+  BE of items 001–003: send/history REST, id-ordered message store, HMAC
+  webhook receiver, 60s reconciliation poll, WS gateway + data-only FCM +
+  device registry; live-verified against dev Chatwoot in the manor —
+  send→dashboard and reply→webhook→history; persona presence/typing deferred
+  to 0006 planning) →
   **AURAT-0006** app-real-chat-client (retires the sim); then behind the
   `billing_enabled` flag **AURAT-0007** wallet-and-topup and **AURAT-0008**
   paid-sessions. Dependency chain: 0004 → 0005 → 0006; 0004 → 0007;
