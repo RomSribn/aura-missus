@@ -1,6 +1,6 @@
 # AURAF-0007 — Real chat backend (Chatwoot-backed)
 Type: technical
-Status: draft
+Status: in-progress
 Priority: P1
 Source spec: AURAI-0002, AURAD-0001, AURAD-0002, AURAD-0003
 
@@ -76,7 +76,9 @@ sessions later with no migration.
   real top-ups; O5 (identity / retention) + O6 (chatter provisioning) are
   production-hardening follow-ups.
 - **Cut into `AURAT` tasks (2026-07-10, see `brain/tasks/`):** v1 free chat =
-  **AURAT-0004** bff-foundation → **AURAT-0005** messaging-and-delivery →
+  **AURAT-0004** bff-foundation (**done 2026-07-11** — NestJS/Prisma 7
+  foundation, Firebase guard, idempotent Chatwoot provisioning, on `develop`
+  @ `24e6727`) → **AURAT-0005** messaging-and-delivery →
   **AURAT-0006** app-real-chat-client (retires the sim); then behind the
   `billing_enabled` flag **AURAT-0007** wallet-and-topup and **AURAT-0008**
   paid-sessions. Dependency chain: 0004 → 0005 → 0006; 0004 → 0007;
