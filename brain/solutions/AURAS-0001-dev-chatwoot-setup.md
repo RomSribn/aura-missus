@@ -113,6 +113,13 @@ CHATWOOT_AGENT_BOT_TOKEN=<agent bot access token>
 - **BFF → Chatwoot** (Application API): `host.docker.internal:3000` if the BFF is in
   Docker, else `localhost:3000`. Align the `webhook_url`/`outgoing_url` above with
   where the BFF actually listens (`/webhooks/chatwoot`, per the BFF build rules).
+- **SSRF guard (found 2026-07-12, AURAT-0006 device e2e):** Chatwoot ≥4.15 routes
+  webhook/agent-bot POSTs through SafeFetch/ssrf_filter, which rejects private
+  addresses — with `host.docker.internal` every agent message shows *"Failed to
+  send · Hostname has no public ip addresses"* and conversations drop out of bot
+  mode. Dev compose must set **`SAFE_FETCH_ALLOW_PRIVATE_NETWORK: 'true'`** on the
+  rails+sidekiq env (gate: chatwoot `lib/safe_fetch.rb`, `fetcher.rb`). Never set
+  it in staging/prod — there the BFF webhook URL is public.
 
 ## Sanity check (optional; full loop is AURAT-0005)
 
