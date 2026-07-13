@@ -84,8 +84,15 @@ sessions later with no migration.
   device registry; live-verified against dev Chatwoot in the manor —
   send→dashboard and reply→webhook→history; persona presence/typing deferred
   to 0006 planning) →
-  **AURAT-0006** app-real-chat-client (retires the sim); then behind the
-  `billing_enabled` flag **AURAT-0007** wallet-and-topup and **AURAT-0008**
+  **AURAT-0006** app-real-chat-client (**done 2026-07-13, owner-approved**
+  — app on the real BFF: REST send/history + WS live events + FCM/notifee
+  persona push, sim deleted, `@aura/contracts` v0.2.0 shared; Android
+  device e2e passed incl. push + notification-tap deep link; iOS/APNs leg
+  deferred; persona presence/typing emission split out as **AURAT-0009**).
+  **v1 free chat — items 001–005 — is complete** (004's live
+  presence/typing lands with AURAT-0009; until then seed presence, no
+  typing indicator). Behind the
+  `billing_enabled` flag: **AURAT-0007** wallet-and-topup and **AURAT-0008**
   paid-sessions. Dependency chain: 0004 → 0005 → 0006; 0004 → 0007;
   {0005,0006,0007} → 0008.
 - **AURAT-0007 BE side (2026-07-11):** wallet + append-only ledger in the BFF
