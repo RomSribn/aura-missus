@@ -21,8 +21,8 @@ on behind a flag.
 | AURAF-0007-003 | spec | ✓ | ✓ | ✗ | ✓ |   | Chat history persists across restarts and devices (one durable thread per advisor) |
 | AURAF-0007-004 | spec | ✓ | ✓ | ✗ | ✗ |   | Start a free chat from the advisor profile; see persona-level presence + typing |
 | AURAF-0007-005 | dev  | ✓ | ✓ | ✗ | ✗ | ✗ | Retire the in-memory chat simulation (canned replies / 1.5s timers) |
-| AURAF-0007-006 | spec | ✓ | — | ✗ | ✗ |   | Book a paid session as a fixed minute-block ("Book now"), prepaid from the wallet, with red start/finish markers |
-| AURAF-0007-007 | spec | ✓ | — | ✗ | ✗ |   | Near the end, extend / book another block; end a session early (block non-refundable) |
+| AURAF-0007-006 | spec | ✓ | — | ✗ | ✓ |   | Book a paid session as a fixed minute-block ("Book now"), prepaid from the wallet, with red start/finish markers |
+| AURAF-0007-007 | spec | ✓ | — | ✗ | ✓ |   | Near the end, extend / book another block; end a session early (block non-refundable) |
 | AURAF-0007-008 | spec | ✓ | — | ✗ | ✓ |   | Top up and see the USD wallet balance (wire the existing Top Up sheet to the real wallet) |
 
 Rows 006–008 ship behind the `billing_enabled` flag (`AURAD-0002`); **v1 launches
@@ -95,3 +95,17 @@ sessions later with no migration.
   `BILLING_ENABLED=false` (routes 404). Item 008's BE ✓ = this API; the App
   column stays for the Top Up sheet wiring (app manor, contract in
   `src/contracts/wallet.ts` → `@aura/contracts`).
+- **AURAT-0008 BE side (2026-07-11):** paid sessions in the BFF — `sessions`
+  module + `advisors` price table (D1: DB is the price authority; unregistered
+  advisor = not bookable, no default price), booking with an up-front
+  transactional debit (`minutes × price`, SESSION_CHARGE ledger entries, same
+  `SELECT … FOR UPDATE` discipline), one-ACTIVE-per-conversation partial
+  unique index, delayed meter finish job + 60s sweep backstop (BullMQ
+  `sessions` queue), extend = same window/new charge, early end forfeits
+  (non-refundable), start/finish activity lines through the sealed adapter
+  stored as `system` messages (history + WS/FCM fan-out from the store),
+  live state + paid minutes mirrored to conversation `custom_attributes`,
+  display-only pricing endpoint. All behind `BILLING_ENABLED` (404 off).
+  Items 006/007 BE ✓ = this API. **App column pending AURAT-0006**: markers
+  rendered red in the app and no-session-UI-when-flag-off are app-manor
+  acceptance, not verifiable here.
