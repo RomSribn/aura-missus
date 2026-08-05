@@ -19,7 +19,7 @@ on behind a flag.
 | AURAF-0007-001 | spec | ✓ | ✓ | ✗ | ✓ |   | Message an advisor and reach a real human chatter |
 | AURAF-0007-002 | spec | ✓ | ✓ | ✗ | ✓ |   | Get the chatter's real reply live, and as a push when the app is backgrounded |
 | AURAF-0007-003 | spec | ✓ | ✓ | ✗ | ✓ |   | Chat history persists across restarts and devices (one durable thread per advisor) |
-| AURAF-0007-004 | spec | ✓ | ✓ | ✗ | ✗ |   | Start a free chat from the advisor profile; see persona-level presence + typing |
+| AURAF-0007-004 | spec | ✓ | ✓ | ✗ | ✓ |   | Start a free chat from the advisor profile; see persona-level presence + typing |
 | AURAF-0007-005 | dev  | ✓ | ✓ | ✗ | ✗ | ✗ | Retire the in-memory chat simulation (canned replies / 1.5s timers) |
 | AURAF-0007-006 | spec | ✓ | ✓ | ✓ | ✓ |   | Book a paid session as a fixed minute-block ("Book now"), prepaid from the wallet, with red start/finish markers |
 | AURAF-0007-007 | spec | ✓ | ✓ | ✓ | ✓ |   | Near the end, extend / book another block; end a session early (block non-refundable) |
@@ -90,8 +90,7 @@ sessions later with no migration.
   device e2e passed incl. push + notification-tap deep link; iOS/APNs leg
   deferred; persona presence/typing emission split out as **AURAT-0009**).
   **v1 free chat — items 001–005 — is complete** (004's live
-  presence/typing lands with AURAT-0009; until then seed presence, no
-  typing indicator). Behind the
+  presence/typing landed with AURAT-0009 — see below). Behind the
   `billing_enabled` flag: **AURAT-0007** wallet-and-topup and **AURAT-0008**
   paid-sessions. Dependency chain: 0004 → 0005 → 0006; 0004 → 0007;
   {0005,0006,0007} → 0008.
@@ -131,3 +130,23 @@ sessions later with no migration.
   history parse, so the flag must not be enabled anywhere before this ships.
   Items 006/007 complete; 008's App/UI ✓ too, with the credit still the BFF
   stub until the PSP feature.
+- **AURAT-0009 BE side (2026-08-05, BFF manor) — item 004's BE ✓, the last v1
+  gap.** The BFF now emits the two persona-level WS events the app already
+  handled: `typing.update`, translated from Chatwoot `conversation_typing_on/off`
+  on the existing HMAC receiver (which turned out to already *receive* them and
+  204 them — for a `Channel::Api` inbox Chatwoot posts every event to the inbox
+  `webhook_url`, so no Chatwoot config was involved), and `presence.update` from
+  polled inbox agent availability. Both WS-only and never stored — they carry no
+  content and mean nothing stale. Two source-verified facts shaped the design:
+  Chatwoot fires `typing_on` **once per burst** and never refreshes it (so the
+  45s TTL is a lost-`typing_off` safety net, not a heartbeat — the ~10s
+  originally sketched would have hidden a live indicator), and there is **no
+  availability webhook** (hence the 30s poll). Presence is inbox-wide in v1: per-
+  persona teams are not deployed and one pool answers every persona, which is the
+  alternative `AURAD-0001` itself names. The chatter's identity (`user`, with
+  their email) is never read at the seam. **No app changes** — `AURAT-0006`'s
+  graceful fallback simply stopped being the fallback. Deliberately deferred with
+  the reasons recorded in `TECH-DEBT` #11–13: the `@aura/contracts` migration
+  (v0.3.0 lacks the BFF-only shapes), `GET /v1/conversations` (repository half
+  built for presence fan-out; the endpoint needs an app-side contract decision),
+  and per-persona presence.
