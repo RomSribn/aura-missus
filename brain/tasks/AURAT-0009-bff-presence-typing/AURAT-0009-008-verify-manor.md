@@ -17,19 +17,47 @@ Manor `develop` @ `8c3734e`, live stack against the dev Chatwoot.
 
 Both acceptance criteria from the task brief are met.
 
-## Not separately exercised
+### Private note raises no indicator (check 4) — confirmed live
 
-Recorded honestly rather than assumed — each is a case where a defect would be
-*silent* rather than visible, so none is disproven by the two checks above:
+Chatter switched the dashboard composer to the **Private Note** tab and typed;
+**no** indicator appeared in the app, and switching back to **Reply** raised it
+again. The control half matters: an empty result on the private-note tab alone
+would look identical to a dropped webhook, so the Reply leg is what makes it
+evidence rather than absence.
+
+### `is_private` is a real boolean end-to-end — verified from source
+
+Worth recording because the unit test could not establish it: `webhook-events.spec.ts`
+feeds `is_private: true` as a boolean, i.e. it *assumes* the type it is testing,
+while the receiver filters strictly (`wire.is_private === true`). A string
+`"true"` on the wire would have passed the filter and raised the indicator on a
+private note. Chased through Chatwoot v4.15.1:
+
+`ReplyBox.isPrivate()` → `isOnPrivateNote` (boolean; for an API inbox the
+computed returns it directly, no other branch) → `conversation.js`
+`axios.post(url, { typing_status, is_private: isPrivate })` (JSON) → Rails
+`params[:is_private]` as `TrueClass` → `handle_typing_status` sets
+`event.data[:is_private] || false` → `Webhooks::Trigger#perform_request`
+`body = @payload.to_json`. No stringification anywhere; the strict check is
+correct.
+
+### Log cleanliness (check 9) — structurally verified, not live-grepped
+
+Audited in code rather than against a running instance: no `console.*` anywhere
+in `src/`; all ten logger call sites enumerated, of which the AURAT-0009 ones log
+`{ chatwootConversationId }` or `{ err }`; `ChatwootApiError` carries status +
+path only and never a response body; pino logs no request bodies and redacts the
+signature and authorization headers. The decisive property is structural rather
+than disciplinary: **`user` is not declared in `CwWebhookTypingWire`**, so there
+is no code path that *can* read the chatter's id, name or email — not "we do not
+log it" but "there is nothing to log it with".
+
+## Still not exercised
 
 | # | Check | Why it matters | Code-side status |
 |---|---|---|---|
-| 4 | Typing on a **private note** raises no indicator | A chatter drafting an internal note would leak as "the advisor is typing to you" | Unit-covered: `webhook-events.spec.ts` drops `is_private: true` for both on and off |
 | 6 | Service User alone online ⇒ dot stays **off** | Otherwise every persona reads permanently online and presence is decorative | Unit-covered: `chatwoot.client.spec.ts` excludes the `/profile` id; the live half is whether `/api/v1/profile` returns the expected id on this instance |
 | 3 | TTL clears the indicator when `typing_off` is lost | A stuck indicator is the failure mode the 45s TTL exists for | Unit-covered with fake timers; needs a dropped webhook to see live |
-| 9 | No agent name / email / id in logs | The typing payload carries all three on the wire (AURAD-0001, build rule 3) | Structurally enforced: `user` is not declared in `CwWebhookTypingWire`, so no code path can read it |
+| 9 | A live `grep` of the running BFF's logs | Confirms the structural argument above against a real event stream | See above — structurally enforced, one command whenever the stack is up |
 
-Checks 4, 6 and 9 are worth a minute in the manor whenever the stack is next up
-— they are the ones a user would never report as broken.
-
-Owner closed the task on the two confirmed criteria.
+Owner closed the task on the two acceptance criteria; checks 4 and 9 followed.
