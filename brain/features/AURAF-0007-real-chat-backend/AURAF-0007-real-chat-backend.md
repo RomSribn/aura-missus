@@ -21,9 +21,9 @@ on behind a flag.
 | AURAF-0007-003 | spec | ✓ | ✓ | ✗ | ✓ |   | Chat history persists across restarts and devices (one durable thread per advisor) |
 | AURAF-0007-004 | spec | ✓ | ✓ | ✗ | ✗ |   | Start a free chat from the advisor profile; see persona-level presence + typing |
 | AURAF-0007-005 | dev  | ✓ | ✓ | ✗ | ✗ | ✗ | Retire the in-memory chat simulation (canned replies / 1.5s timers) |
-| AURAF-0007-006 | spec | ✓ | — | ✗ | ✓ |   | Book a paid session as a fixed minute-block ("Book now"), prepaid from the wallet, with red start/finish markers |
-| AURAF-0007-007 | spec | ✓ | — | ✗ | ✓ |   | Near the end, extend / book another block; end a session early (block non-refundable) |
-| AURAF-0007-008 | spec | ✓ | — | ✗ | ✓ |   | Top up and see the USD wallet balance (wire the existing Top Up sheet to the real wallet) |
+| AURAF-0007-006 | spec | ✓ | ✓ | ✓ | ✓ |   | Book a paid session as a fixed minute-block ("Book now"), prepaid from the wallet, with red start/finish markers |
+| AURAF-0007-007 | spec | ✓ | ✓ | ✓ | ✓ |   | Near the end, extend / book another block; end a session early (block non-refundable) |
+| AURAF-0007-008 | spec | ✓ | ✓ | ✓ | ✓ |   | Top up and see the USD wallet balance (wire the existing Top Up sheet to the real wallet) — the credit itself stays the BFF stub until a PSP |
 
 Rows 006–008 ship behind the `billing_enabled` flag (`AURAD-0002`); **v1 launches
 with 001–005 only (free chat)** — owner-ratified 2026-07-09 — enabling paid
@@ -116,3 +116,18 @@ sessions later with no migration.
   Items 006/007 BE ✓ = this API. **App column pending AURAT-0006**: markers
   rendered red in the app and no-session-UI-when-flag-off are app-manor
   acceptance, not verifiable here.
+- **App side of P1 = AURAT-0010 (2026-08-04, app manor).** The tail AURAT-0008
+  parked (it named AURAT-0006, which had already closed) grew into the full
+  P1 UI: a new `features/paid-session` slice — block picker driven by the
+  pricing endpoint, wallet pre-check, booking with a client `idempotencyKey`
+  kept across retries, a countdown *derived from `endsAt`* (no server ticks),
+  the near-end extend prompt as a state of the session bar, early finish
+  behind an explicit forfeit warning — plus red markers rendered from the
+  `direction: 'system'` messages the BFF already stores, a new
+  `entities/wallet` (real Profile balance + the stub top-up), and a client
+  `BILLING_ENABLED` flag that hides all of it. **`@aura/contracts` v0.3.0**
+  aligned session/wallet to the as-built BFF and added `'system'` +
+  `session.updated` — without it a single marker in history breaks the app's
+  history parse, so the flag must not be enabled anywhere before this ships.
+  Items 006/007 complete; 008's App/UI ✓ too, with the credit still the BFF
+  stub until the PSP feature.
