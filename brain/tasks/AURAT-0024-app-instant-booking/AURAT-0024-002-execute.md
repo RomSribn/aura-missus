@@ -96,3 +96,24 @@ Worth it only if the message should name the conflicting booking.
 
 Merged again (`develop` after `e29795b`), gates re-verified in manor:
 **46 suites / 248 tests**.
+
+**The sheet answered from screen mount, not from opening.** Ending a session
+left "Book now" still offering the soonest free slot; the thread had to be
+re-entered before it would start one now. `useQuickBooking` read pricing and
+availability once, on mount — while a session ran the server had answered
+`instantAvailable: false`, quite correctly, and nothing asked again. A session
+ending, the user's own or the advisor's with somebody else, turns that answer
+over and no push carries it.
+
+The same shape as the banner defect and the same lesson: **state whose truth
+expires needs a trigger, and mount is not one.** The sheet now re-reads when it
+opens, which is the only moment its answer has to be true and the moment the
+user asks the question.
+
+Two hatches closed with it: the fallthrough to the grid was decided from the
+pre-check's stale answer, so a refresh landing on "nothing free after all" now
+closes the sheet and goes to the grid through the same wait-for-the-modal path;
+and a duration change re-reads here too, since `instantAvailable` moves with the
+block exactly as the grid does.
+
+Merged (`develop` `3852916`), manor gates green: **46 suites / 250 tests**.
