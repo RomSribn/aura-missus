@@ -125,6 +125,52 @@ soonest slot is allowed to be.
 
 App side: `AURAT-0022`.
 
+### Amended again 2026-08-14 — a session may start *now*, and occupancy becomes an interval
+
+The first amendment bought a shorter wait and said a true start-this-second was
+server work "not being taken". The owner has now taken it: **starting now is
+what the product needs**, and half an hour of dead time before a paid
+conversation is the wrong thing to ask of someone who came to talk.
+
+The blocker was never the lead time. It is that occupancy is an **equality**:
+`UNIQUE (advisorId, startsAt)` on a grid-aligned instant, which is only sound
+while one booking fills exactly one cell — hence the boot check refusing any
+block longer than the step. A 10-minute grid with 30-minute sessions is not a
+tuning mistake under that model, it is an unsound grid, and the service is
+right to refuse it.
+
+**So occupancy becomes an interval.** A session is `[startsAt, endsAt)`, and
+"is this free" becomes "does anything of this advisor's overlap it". Three
+things follow, and they are the whole change:
+
+1. **`startsAt` no longer has to be aligned**, so `startsAt = now` is a valid
+   booking and "Book now" starts a session immediately — the instant block, but
+   inside the scheduled model rather than beside it.
+2. **The grid step stops being tied to block length.** Whatever step the "pick a
+   time" screen uses is a display choice; 10 or 15 minutes become possible with
+   30-minute sessions.
+3. **Availability becomes duration-dependent.** A gap can fit ten minutes and
+   not thirty, so the read must be told how long the session is.
+
+What must not be lost is the **double-booking guarantee**, which is the most
+safety-critical thing the BFF owns. It does not rest on the index alone: every
+booking transaction already takes `SELECT … FOR UPDATE` on the advisor row,
+precisely so two clients racing one slot are serialized. An overlap query
+inside that lock is as sound as the equality was; the DB-level belt, if wanted,
+is an `EXCLUDE USING gist` constraint rather than a unique index.
+
+**A trap worth naming before it is built:** the lead time currently rejects any
+start inside `now + SESSION_SLOT_LEAD_MINUTES`, which would reject `now` itself.
+The lead protects a chatter from a slot appearing under them with no warning —
+that reasoning applies to *picking a future slot*, not to a user saying "I am
+here, start it". The instant path has to be exempt, or the lead has to be zero,
+and the first is the honest reading.
+
+Tasks: **`AURAT-0023`** (BFF, executes in `aura-bff-manor`) and
+**`AURAT-0024`** (app). `AURAT-0018`'s grid tests are written against equality
+and will need rewriting against intervals — that, not the query, is the bulk of
+the work.
+
 ## Progress
 
 **`@aura/contracts` v0.5.0 published 2026-08-14** (`0c1b9ac`, tag `v0.5.0` on
