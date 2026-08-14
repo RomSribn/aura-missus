@@ -1,7 +1,13 @@
 # AURAD-0008 — Are paid sessions scheduled slots paid by card, or instant blocks prepaid from the wallet?
 
 Date: 2026-08-14
-Status: accepted (**owner-ratified 2026-08-14** — option B)
+Status: **superseded by `AURAD-0009` (2026-08-14)** — was accepted, owner-ratified, option B
+
+> Superseded the same day. Option B deferred the booking flow **because it
+> required a PSP**; `AURAD-0009` removes that premise by paying the scheduled
+> slot from the wallet instead of by card, so rows 006–012 became buildable
+> without one. The conflict analysis below still stands and is why the
+> replacement decision exists.
 
 ## Decision
 

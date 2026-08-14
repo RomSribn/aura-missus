@@ -3,11 +3,15 @@
 Date: 2026-07-08
 Status: accepted (owner-ratified 2026-07-09) — **still in force**
 
-> Design handoff round 2 (2026-08-14) drew a different session: a scheduled slot
-> paid by card, refundable ≥24h / half <24h. That variant is **designed but not
-> adopted** — see `AURAD-0008`, where the owner chose to keep this decision and
-> defer the booking flow until a PSP exists. Only the in-thread session surface
-> from that round is being built (`AURAF-0008` rows 001–005).
+> **Amended in part by `AURAD-0009` (2026-08-14).** Design handoff round 2 drew a
+> scheduled slot, paid by card, refundable ≥24h / half <24h. `AURAD-0008` first
+> deferred it for want of a PSP; `AURAD-0009` then adopted the scheduled slot and
+> its refund policy while keeping **the wallet** as the rail, so the card never
+> became a prerequisite. What still holds from this file: the wallet is the only
+> money source, the ledger is append-only, the session runs inside the same
+> durable thread, and a block already **running** stays non-refundable. What
+> changed: a session may start at a booked time rather than immediately, and may
+> be cancelled or rescheduled **before** it starts.
 
 ## Decision
 
