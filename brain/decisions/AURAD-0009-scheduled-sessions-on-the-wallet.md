@@ -210,6 +210,43 @@ every client must mean the same instants. Without it a user hours from
 `AURAT-0016` sends the device zone. Additive; a client that sends nothing keeps
 the server defaults. **`AURAT-0018` should move its dependency to `v0.5.1`.**
 
+**v0.6.0 — shape agreed 2026-08-14 (`AURAT-0023`), not yet cut.** The second
+amendment's contract, owner-approved before either side built, so the two manors
+cannot drift while `AURAT-0024` waits. The package is minted in `aura-app-manor`;
+the BFF implements the same shape in its mirror (`TECH-DEBT #11`) and pins it in
+`session.spec.ts`. Full write-up:
+`tasks/AURAT-0023-bff-instant-and-overlap/AURAT-0023-007-contract.md`.
+
+- `BookSessionRequest` gains **`startNow`** and makes `startsAt` optional —
+  **exactly one of the two**, both or neither is a 400. "Now" travels as an
+  intent, never as a client timestamp: the server compares a slot to its own
+  clock when it processes the request, so a client-sent `now` is already in the
+  past on arrival (watched failing in the manor at `lead = 0`). A missing
+  `startsAt` is deliberately not read as "now" — that would turn a forgotten
+  field into a charged, running session. The instant path is exempt from grid
+  alignment and from the lead time, and answers `status: 'ACTIVE'`, so it is
+  neither cancellable nor reschedulable.
+- `AvailabilityQuery` gains **`minutes`** (optional; the server answers for its
+  shortest block when omitted): under interval occupancy a gap can fit ten
+  minutes and not thirty, so the read must be re-run when the duration changes
+  and the selected slot cleared with it.
+- `AvailabilityResponse` gains **`instantAvailable`** — whether a session of
+  that duration could start this second. The app owns neither the clock
+  (`AURAF-0008-001`) nor any view of other clients' bookings, so without it the
+  quick sheet offers a "Now" that 409s, which is the failure the first amendment
+  refused to ship.
+- Everything else is byte-identical to v0.5.1; additive throughout, so a v0.5.x
+  client keeps working and the two halves can merge in one window.
+
+**One behaviour change with no shape change:** the flat first-session credit is
+now spent when it is **consumed**, not when a session is completed — cancelling a
+first booking no longer hands it back (owner decision, `AURAT-0023`). The credit
+clamps to the subtotal, so a block cheaper than $5 is free, and eligibility used
+to return with a cancellation: book free → cancel → book free was unbounded, and
+took an advisor's time for nothing. Money never leaked (the credit is a discount
+on the charge, never a ledger credit), but instant booking would have pointed
+that cycle at **now** instead of at a future slot.
+
 ### Sequencing — the two halves must land together
 
 `AURAT-0018-005` §6 puts it plainly: `POST advisors/:id/sessions` gains

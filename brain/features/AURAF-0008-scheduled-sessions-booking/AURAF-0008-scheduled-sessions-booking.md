@@ -41,16 +41,24 @@ model, so they are independent of the conflict and are being built now as
 | AURAF-0008-003 | spec | ✓ | ✓ | ✗ | ✗ |   | System dividers in the transcript: `from:'sys'` (+ `tone:'teal'`), "PAID SESSION STARTED · N MIN" / "SESSION ENDED", persisting in scroll-back |
 | AURAF-0008-004 | spec | ✓ | ✓ | ✗ | — |   | Chats list: session markers (teal live pill / quiet scheduled line), threads with a session sort to the top, `sys` preview renders as "— {text}" |
 | AURAF-0008-005 | spec | ✓ | ✓ | ✗ | — |   | Chat header action swaps "Book now" → "Extend +15 min" while live |
-| AURAF-0008-006 | spec | ✓ | ✓ | ✗ | ✗ |   | Book a session: advisor card, static chat-format card, duration, `DateStrip` (14 d), `SlotGrid`, sticky total |
-| AURAF-0008-007 | spec | ✓ | ✓ | ✗ | ✗ |   | Review + payment + "Booked" confirmation (`lock` CTA, first-session credit, card vs balance rows) |
+| AURAF-0008-006 | spec | ✓ | ✓ | ✗ | ✓ |   | Book a session: advisor card, static chat-format card, duration, `DateStrip` (14 d), `SlotGrid`, sticky total |
+| AURAF-0008-007 | spec | ✓ | ✓ | ✗ | ✓ |   | Review + payment + "Booked" confirmation (`lock` CTA, first-session credit, card vs balance rows) |
 | AURAF-0008-008 | spec | ✓ | ✓ | ✗ | ✗ |   | Session detail: state-coloured hero eyebrow, detail rows, one always-enabled "Open chat" footer |
 | AURAF-0008-009 | spec | ✓ | ✓ | ✗ | ✗ |   | Reschedule with the change preview + the 4-hour policy |
 | AURAF-0008-010 | spec | ✓ | ✓ | ✗ | ✗ |   | Cancel sheet, both refund variants driven by `hoursUntil` — **mirrored server-side** |
-| AURAF-0008-011 | spec | ✓ | ✓ | ✗ | — |   | Real availability + pricing API replaces the deterministic slot stub |
+| AURAF-0008-011 | spec | ✓ | ✓ | ✗ | ✓ |   | Real availability + pricing API replaces the deterministic slot stub |
 | AURAF-0008-012 | spec | ✓ | ✓ | ✗ | — |   | Local notification 30 min before + "Add to calendar" — **also owns the copy `AURAT-0016` removed**: the Booked screen's "We'll remind you 30 minutes before" + its calendar button, and the Upcoming card's "Reminder set · 30 min before". They were promises with no mechanism behind them, so they come back with this row |
 
 `Own` = owned by this feature. `UI`/`BE` track what is actually built; all rows
 start `✗`. `—` = not applicable to that side.
+
+`BE` on rows 006 / 007 / 011 is the BFF half shipped by **`AURAT-0018`**
+(availability, pricing, booking with an up-front wallet debit, reschedule,
+cancel with refund tiers, sessions list) and widened by **`AURAT-0023`**
+(occupancy became an interval, so a session can start **now** and availability
+answers per duration — `AURAD-0009`, second amendment). The app halves of 006 /
+007 are `AURAT-0016` / `AURAT-0022`, and the instant path's app half is
+`AURAT-0024`.
 
 ## NOT in scope
 
