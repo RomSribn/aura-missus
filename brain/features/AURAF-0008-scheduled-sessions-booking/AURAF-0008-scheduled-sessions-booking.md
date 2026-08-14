@@ -14,6 +14,13 @@ cancel, and — the half that changes what the user sees every session — a set
 under the chat header, system dividers in the transcript, session markers and
 sorting in the chats list, and a header action that swaps to "Extend".
 
+> **Superseded split.** `AURAD-0008` parked rows 006–012 for want of a PSP;
+> `AURAD-0009` (ratified the same day) unparked them by paying the slot from the
+> **wallet** instead of by card. Rows 006–007 are `AURAT-0016` (app, in flight)
+> and `AURAT-0018` (BFF, in flight in `aura-bff-manor`); 008–010 are
+> `AURAT-0017`. The card rail became its own feature, `AURAF-0009`. The section
+> below is kept as the record of why the split existed.
+
 ## Split by AURAD-0008 (owner-ratified 2026-08-14, option B)
 
 Rows 006–012 assume scheduled, card-paid, refundable sessions, which **contradict
@@ -40,7 +47,7 @@ model, so they are independent of the conflict and are being built now as
 | AURAF-0008-009 | spec | ✓ | ✓ | ✗ | ✗ |   | Reschedule with the change preview + the 4-hour policy |
 | AURAF-0008-010 | spec | ✓ | ✓ | ✗ | ✗ |   | Cancel sheet, both refund variants driven by `hoursUntil` — **mirrored server-side** |
 | AURAF-0008-011 | spec | ✓ | ✓ | ✗ | — |   | Real availability + pricing API replaces the deterministic slot stub |
-| AURAF-0008-012 | spec | ✓ | ✓ | ✗ | — |   | Local notification 30 min before + "Add to calendar" |
+| AURAF-0008-012 | spec | ✓ | ✓ | ✗ | — |   | Local notification 30 min before + "Add to calendar" — **also owns the copy `AURAT-0016` removed**: the Booked screen's "We'll remind you 30 minutes before" + its calendar button, and the Upcoming card's "Reminder set · 30 min before". They were promises with no mechanism behind them, so they come back with this row |
 
 `Own` = owned by this feature. `UI`/`BE` track what is actually built; all rows
 start `✗`. `—` = not applicable to that side.
