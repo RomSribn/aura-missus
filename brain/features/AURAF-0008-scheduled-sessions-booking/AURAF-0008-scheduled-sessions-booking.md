@@ -1,6 +1,9 @@
 # AURAF-0008 — Sessions & booking, design handoff round 2
 Type: product
-Status: in-progress (rows 001–005) — rows 006–012 **parked per `AURAD-0008` option B**
+Status: in-progress — rows 001–005 shipped (`AURAT-0015`); rows 006–011 un-parked by
+`AURAD-0009`, **server half shipped** (`AURAT-0018`, widened by `AURAT-0023`), app
+half in flight (`AURAT-0016`/`AURAT-0017`/`AURAT-0022`/`AURAT-0024`); row 012 still
+open
 Priority: P1
 Source spec: `.claude/design_handoff_aura/SESSIONS_BOOKING.md` (workspace, committed `a88cbb5`)
 
@@ -17,9 +20,9 @@ sorting in the chats list, and a header action that swaps to "Extend".
 > **Superseded split.** `AURAD-0008` parked rows 006–012 for want of a PSP;
 > `AURAD-0009` (ratified the same day) unparked them by paying the slot from the
 > **wallet** instead of by card. Rows 006–007 are `AURAT-0016` (app, in flight)
-> and `AURAT-0018` (BFF, in flight in `aura-bff-manor`); 008–010 are
-> `AURAT-0017`. The card rail became its own feature, `AURAF-0009`. The section
-> below is kept as the record of why the split existed.
+> and `AURAT-0018` (BFF, shipped); 008–010 are `AURAT-0017`. The card rail became
+> its own feature, `AURAF-0009`. The section below is kept as the record of why
+> the split existed.
 
 ## Split by AURAD-0008 (owner-ratified 2026-08-14, option B)
 
@@ -66,8 +69,10 @@ answers per duration — `AURAD-0009`, second amendment). The app halves of 006 
   `'Chat'`; the `video` and `mic` icons ship unused. This *confirms* `AURAD-0001`.
 - **A separate session room or a join step.** The thread is the session surface;
   entry is never gated. The old disabled "Chat opens 5 min before" button is gone.
-- **PSP integration.** Still the `AURAF-0007` boundary — but note that under
-  `AURAD-0008` option A the Review screen cannot function without one.
+- **PSP integration.** Still the `AURAF-0007` boundary. `AURAD-0009` took it off the
+  critical path entirely: the slot is paid from the wallet, so the Review screen
+  works today and the card rail becomes a later addition to it — its own feature,
+  `AURAF-0009`, rather than a prerequisite for this one.
 
 ## Context found
 
@@ -84,17 +89,42 @@ answers per duration — `AURAD-0009`, second amendment). The app halves of 006 
 - **The dividers are half-built.** `AURAT-0010` already renders red markers from
   BFF-stored `direction:'system'` messages; row 003 is a restyle to the handoff's
   hairline/label/hairline form plus the teal tone, not new plumbing.
-- `@aura/contracts` is on **v0.4.0**.
+- `@aura/contracts` is on **v0.6.0**, cut in three steps as the server was built:
+  v0.5.0 the `AURAD-0009` boundary (`SCHEDULED`/`CANCELLED`, `startsAt` beside a
+  nullable `startedAt`, reschedule/cancel/list/availability, the per-duration
+  pricing breakdown), v0.5.1 the typed availability query with the `tz` param
+  `AURAT-0018` had flagged, v0.6.0 the instant path and availability that knows the
+  duration (`AURAT-0023`). The BFF mirrors it by hand (`TECH-DEBT #11`).
+
+## Resolved questions
+
+1. **`AURAD-0008`** — resolved by **`AURAD-0009`**: scheduled + **wallet** +
+   refundable-before-start; the card rail waits for a PSP as `AURAF-0009`.
+   `AURAD-0009`'s **second amendment** (`AURAT-0023`) then brought the instant path
+   back: occupancy is an interval, so a session may start *now* — unaligned, exempt
+   from the lead time, created `ACTIVE`, and therefore neither cancellable nor
+   reschedulable. Scheduled and instant now coexist; only the `AURAT-0010` block
+   picker stayed retired.
+2. **The −$5.00 first-session credit is a discount on the charge**, not a ledger
+   credit (`AURAT-0018`). If it were money in the wallet, book → cancel → refund
+   would hand the user $5 of real balance per cycle; as a discount, a refund can
+   only ever return what was actually taken. `SessionPricing` carries
+   `subtotalMinor` / `creditMinor` / `costMinor` per duration, and the session row
+   keeps `creditMinor` as the audit trail of a discount that leaves no ledger row.
+   **`AURAT-0023` closed the remaining loop**: the credit is spent when *consumed*,
+   not merely when booked, so cancelling no longer hands it back (owner decision).
+3. **The pricing endpoint stays the source.** `advisors.priceMinorPerMinute` is the
+   only price authority (`AURAT-0008` D1); the handoff's `advisor.price × mins` is a
+   prototype convenience and the app never recomputes a total.
+4. **The sessions-list gap was real and is closed**: `GET /v1/sessions` returns every
+   session of the caller, newest slot first, all advisors, all statuses
+   (`AURAT-0018`). It is a different gap from `GET /v1/conversations`
+   (BFF `TECH-DEBT #12`), which stays open.
 
 ## Open questions
 
-1. **`AURAD-0008`** — scheduled+card+refundable, or instant+wallet+non-refundable?
-   Everything below 006 depends on it.
-2. Does the −$5.00 first-session credit come from the wallet ledger (a real
-   ledger direction) or is it a display-only discount on the charge?
-3. The handoff prices in **`advisor.price × mins`** with no mention of the BFF's
-   `advisors.priceMinorPerMinute` authority (`AURAT-0008` D1: no row = not
-   bookable, no default). Confirm the pricing endpoint stays the source.
-4. `nextFor`/`activeFor` need the **whole** session list per advisor; the app has
-   no `GET /v1/conversations` yet (BFF `TECH-DEBT #12`) — check whether a
-   sessions-list endpoint is a separate gap.
+1. Row 012 (30-minute reminder + add-to-calendar) is untouched: local notification
+   only, or a server-side push? The BFF sends no session reminders today.
+2. The booking horizon exists twice — a literal `max(14)` in the contract's
+   availability query, and `SESSION_BOOKING_HORIZON_DAYS` on the server. They agree
+   at 14 today; whichever one moves first breaks the other (BFF `TECH-DEBT #15`).
