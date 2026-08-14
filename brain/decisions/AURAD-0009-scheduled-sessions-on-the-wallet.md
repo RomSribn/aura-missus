@@ -122,6 +122,31 @@ decision, so both sides build from one shape:
 - `session.updated` needed no shape change but now also carries the
   `SCHEDULED → ACTIVE` transition the meter makes by itself.
 
+**v0.5.1 published 2026-08-14** (`9ee43b2`, tag `v0.5.1`) — answers the open item
+`AURAT-0018-005` flagged for the app manor. The availability endpoint's optional
+`tz` was added after v0.5.0 was cut, so it existed only in prose: now
+`AvailabilityQuery { days, tz }` types it, the way `HistoryQuery` already types
+history's. **`tz` decides only which day a slot is filed under, never when it
+happens** — the grid stays UTC-anchored because occupancy is global (O2) and
+every client must mean the same instants. Without it a user hours from
+`SESSION_SLOT_TIMEZONE` sees evening slots under the neighbouring day, so
+`AURAT-0016` sends the device zone. Additive; a client that sends nothing keeps
+the server defaults. **`AURAT-0018` should move its dependency to `v0.5.1`.**
+
+### Sequencing — the two halves must land together
+
+`AURAT-0018-005` §6 puts it plainly: `POST advisors/:id/sessions` gains
+`startsAt`, and *"this is where instant booking dies"*. The consequence runs
+both ways, and neither manor can fix it alone:
+
+- BFF merges first → the app's shipped block picker sends no `startsAt` and gets
+  **400**; paid booking is broken on `develop` until the app catches up.
+- App merges first → the booking screens send `startsAt` to a server that does
+  not understand it yet.
+
+So `AURAT-0016` and `AURAT-0018` merge in **one window**, and the device pass is
+only meaningful after both. Whoever is ready first waits at the merge gate.
+
 ## Why it matters
 
 `AURAD-0008` chose to defer this whole half **because it required a PSP**. That
