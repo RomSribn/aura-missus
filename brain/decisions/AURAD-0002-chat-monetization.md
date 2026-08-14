@@ -1,7 +1,13 @@
 # AURAD-0002 — Free chat is the baseline; a paid session is a metered window inside the same thread
 
 Date: 2026-07-08
-Status: accepted (owner-ratified 2026-07-09)
+Status: accepted (owner-ratified 2026-07-09) — **still in force**
+
+> Design handoff round 2 (2026-08-14) drew a different session: a scheduled slot
+> paid by card, refundable ≥24h / half <24h. That variant is **designed but not
+> adopted** — see `AURAD-0008`, where the owner chose to keep this decision and
+> defer the booking flow until a PSP exists. Only the in-thread session surface
+> from that round is being built (`AURAF-0008` rows 001–005).
 
 ## Decision
 
