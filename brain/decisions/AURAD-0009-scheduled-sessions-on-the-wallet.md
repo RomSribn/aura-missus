@@ -94,6 +94,34 @@ buy it. If that turns out to be wrong in the market, this is the line to revisit
 **Extend is unaffected.** Adding minutes to a session that is already running is
 a different act from booking one, and the block sheet keeps serving it.
 
+## Progress
+
+**`@aura/contracts` v0.5.0 published 2026-08-14** (`0c1b9ac`, tag `v0.5.0` on
+`git@github.com:RomSribn/aura-contracts`) — the app↔BFF boundary for this
+decision, so both sides build from one shape:
+
+- `SessionStatus` gains `SCHEDULED` and `CANCELLED`.
+- `Session.startsAt` (the booked slot, always present) is split from
+  `startedAt` (the server's clock at the moment the meter began, **null while
+  scheduled**). One field used to mean both.
+- `BookSessionRequest` carries `startsAt` beside `minutes`; `ExtendSessionRequest`
+  keeps its own shape without a slot, since extend is untouched by this decision.
+- `RescheduleSessionRequest` patches `startsAt`; `CancelSessionResponse` answers
+  with `refundedMinor` + the new balance — **the server computes the policy**,
+  the app only renders it. Cancelling an already-started session must be
+  refused (409), never refunded at zero.
+- `AvailabilityResponse` returns whole days including full ones, so a date strip
+  can show a day as taken rather than hide it. **A slot is an offer, not a
+  reservation** — the server re-checks `startsAt` and `minutes` at booking,
+  because a slot can be taken between the read and the tap.
+- `SessionPricing.blocks` gained `subtotalMinor` / `creditMinor` / `costMinor`
+  per duration: the first-session credit is flat, not proportional, so no
+  block's total may be derived from another's.
+- `SessionsResponse` (`GET /v1/sessions`) is the list the Sessions tab needs and
+  the app has never had.
+- `session.updated` needed no shape change but now also carries the
+  `SCHEDULED → ACTIVE` transition the meter makes by itself.
+
 ## Why it matters
 
 `AURAD-0008` chose to defer this whole half **because it required a PSP**. That
