@@ -1,8 +1,7 @@
 # AURAD-0009 — Sessions become scheduled slots, still paid from the wallet
 
 Date: 2026-08-14
-Status: proposed — **needs owner ratification** (direction chosen by the owner in
-conversation 2026-08-14; one sub-question below is still open)
+Status: accepted (**owner-ratified 2026-08-14**)
 
 **Supersedes `AURAD-0008`.** **Amends `AURAD-0002` in part.**
 
@@ -75,22 +74,25 @@ only place the implementation departs from the design.
 - The Sessions tab's history needs a **sessions list read**, which the BFF does
   not expose today (only `pricing` and `active`). It belongs to `AURAT-0018`.
 
-## Open for ratification
+## Resolved: instant booking does **not** survive
 
-**Does instant booking survive alongside scheduled?** The design routes the chat
-header's "Book now" *into* the booking flow, which would retire the shipped
-instant block — the one `AURAD-0002` calls the growth loop, and the one
-`AURAT-0010` built and verified.
+The owner chose the design's single path. "Book now" leads to the booking flow
+and nowhere else; the instant block picker is **removed**.
 
-Recommendation: **keep both.** Scheduling is the new capability, not a
-replacement — a user who wants to talk *now* should not be made to pick a slot,
-and the earliest-slot workaround is worse than the instant path that already
-works. Concretely: the block picker stays for "start now", the booking flow is
-reached from the same CTA as a second option, and extend keeps working on the
-running session either way.
+Recorded plainly, because it retires working code: `AURAT-0010` built the
+instant block and it was device-verified, and `AURAD-0002` called free
+re-engagement plus instant blocks the growth loop. That loop now rests on free
+chat alone, which stays instant and unmetered — only *paid* time becomes
+scheduled.
 
-If the owner prefers the design's single path, say so and this file is amended
-before any code is written — that is a cheaper edit here than in five screens.
+The consequence to expect on device: the soonest a user can pay for time is the
+next free slot, and by the design's own rule any slot inside the next **30
+minutes** counts as past. Someone who wants paid attention immediately cannot
+buy it. If that turns out to be wrong in the market, this is the line to revisit
+— it is a product choice here, not a technical constraint.
+
+**Extend is unaffected.** Adding minutes to a session that is already running is
+a different act from booking one, and the block sheet keeps serving it.
 
 ## Why it matters
 
