@@ -94,6 +94,37 @@ buy it. If that turns out to be wrong in the market, this is the line to revisit
 **Extend is unaffected.** Adding minutes to a session that is already running is
 a different act from booking one, and the block sheet keeps serving it.
 
+### Amended 2026-08-14 — a fast path comes back, as the *nearest slot*
+
+Seeing the flow, the owner asked for "Book now" to be quick again: a sheet that
+books the soonest free time in one tap, with a way through to the full grid, and
+the grid itself starting at the next usable hour instead of spending its space
+on the morning that has already passed.
+
+This walks back part of the resolution above, and the reason it can be walked
+back cheaply is that it is **not** the instant block returning. Nothing about
+the model changes: the session is still a scheduled slot, still paid from the
+wallet, still started by the server's meter. What changes is how far away the
+soonest slot is allowed to be.
+
+- **`SESSION_SLOT_LEAD_MINUTES` moves to 0** — a config value, no server code
+  (`AURAT-0018`'s env schema already allows it). The soonest bookable slot
+  becomes the next grid point rather than one a half-hour out.
+- **The label stays honest.** Even at lead 0 the grid is anchored to 30-minute
+  UTC boundaries, so "the soonest" can still be 29 minutes away. The sheet says
+  *"15:30 · in 12 min"*, never "Now" — a button that says now and means later is
+  the failure this whole decision was written to avoid.
+- **A true start-this-second is still server work** and is not being taken:
+  bookings are validated as on-grid, and advisor occupancy is a unique index on
+  the aligned `startsAt`, so an unaligned session would need occupancy by
+  overlap instead of by equality. If the market says a half-hour wait is too
+  long, that is the task to mint.
+- The lead time is what gives a chatter warning that someone is coming. At 0
+  there is none; 5 minutes is the obvious compromise if that turns out to
+  matter operationally.
+
+App side: `AURAT-0022`.
+
 ## Progress
 
 **`@aura/contracts` v0.5.0 published 2026-08-14** (`0c1b9ac`, tag `v0.5.0` on
