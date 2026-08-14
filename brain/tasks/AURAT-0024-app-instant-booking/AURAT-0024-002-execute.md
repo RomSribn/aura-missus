@@ -65,3 +65,34 @@ times". The order was: their merge → their deploy → this merge.
 The device pass: "Book now" starting a session immediately with the banner and
 divider live at once, the grid re-reading when the block changes, and the sheet
 falling back to the soonest slot when the advisor is busy.
+
+## Post-merge, from the device pass
+
+**The timer plate did not appear until the thread was re-entered.** Two hooks
+sat in the same screen and never spoke: `usePaidSession` owns the running
+session and learns of one from `fetchActiveSession` — mount, advisor change,
+foreground — while the quick sheet booked through `useBookingConfirm`, which
+announced success as `onBooked()` and **threw the response away**. Re-entering
+remounted the hook, which is exactly the workaround the symptom described.
+
+Invisible until now on purpose: every booking used to produce a `SCHEDULED`
+session, so there was nothing live to show. `ACTIVE` in the response exposed it.
+
+Fixed by handing the session over rather than fetching it again — the rule the
+balance already follows after a debit. A session that is not running clears the
+state instead, so a scheduled booking cannot put a countdown on screen for
+something that has not started. Three tests pin it.
+
+**The 409 copy was blaming a stranger.** "That time was just taken" is only half
+true: the server answers 409 both when another client won the slot and when the
+asking user already has a session covering that window — booking 30 minutes now
+against your own 19:30 booking is the reachable case. The app cannot tell them
+apart, because `BffApiError` carries the status and the body is deliberately
+never read. The wording is now true of both.
+
+*Recorded, not taken:* distinguishing the two needs a **reason code in the error
+body** (`slotTaken` / `userBusy`), which is a contract addition plus BFF work.
+Worth it only if the message should name the conflicting booking.
+
+Merged again (`develop` after `e29795b`), gates re-verified in manor:
+**46 suites / 248 tests**.
