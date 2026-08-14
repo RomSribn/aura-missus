@@ -117,3 +117,21 @@ and a duration change re-reads here too, since `instantAvailable` moves with the
 block exactly as the grid does.
 
 Merged (`develop` `3852916`), manor gates green: **46 suites / 250 tests**.
+
+**The sheet collapsed while re-checking.** Changing the block emptied it — the
+content vanished, the height fell, a scrollbar flashed — which read as a lag
+though nothing was wrong.
+
+One flag was doing two jobs: `loading` meant both "nothing to show yet" and
+"asking again", and the sheet swapped its whole body for a spinner on either.
+They are separate now. A first read may spin because it has nothing to keep; a
+re-read keeps the answer, dims the slot line, says it is being checked, and
+holds the button — confirming against a time that is being recomputed is the
+one thing that must not happen.
+
+The wallet already worked this way (`AURAT-0019`: a known balance stays put
+through a re-read, because a card that empties on refresh reads as money going
+missing). Worth generalising: **anything re-read behind an answer already on
+screen keeps the answer.**
+
+Merged (`develop` `20d2467`), manor gates green: **46 suites / 251 tests**.
