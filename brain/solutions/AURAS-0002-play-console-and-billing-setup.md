@@ -167,12 +167,36 @@ for whom, stays the owner's call under this file.
 
 ### 7. Server-side verification (unblocks `AURAT-0027`)
 
-1. Play Console → *Setup → API access* → link a Google Cloud project.
-2. Create a service account; grant it **View financial data** and
-   *Manage orders and subscriptions* on the app.
-3. Download the JSON key and hand it to the BFF as a secret.
-4. The BFF calls `androidpublisher.purchases.products.get(packageName,
+**The console flow changed — the owner found this 2026-08-18.** Play Console no
+longer has a *Setup → API access* page, and no longer asks you to link a Google
+Cloud project. The service account is now created in Google Cloud directly and
+granted its rights from Play Console's *Users and permissions*.
+
+That removes a step and adds a trap: **linking used to enable the Google Play
+Android Developer API for you.** Nothing does now. Verified on 2026-08-18 that
+`androidpublisher.googleapis.com` is *not* among the 40 APIs enabled on
+`aura-2781b` — so without this, the BFF's first real verification fails with a
+`403 SERVICE_DISABLED` at the worst possible moment.
+
+1. **Google Cloud → APIs & Services → enable `androidpublisher.googleapis.com`**
+   (Google Play Android Developer API), in the project that will own the service
+   account. This is the step the old linking did implicitly.
+2. **Google Cloud → IAM & Admin → Service Accounts** → create a dedicated one.
+   Do not reuse `firebase-adminsdk-fbsvc@aura-2781b…`: it already holds the keys
+   to auth, and a leaked key should not cost both.
+3. **Keys → Add key → JSON** → download.
+4. **Play Console → Users and permissions → Invite new user** → paste the
+   service account's email → grant it, on `cc.silvermind.aura`, **View financial
+   data** and **Manage orders and subscriptions**.
+5. Hand the BFF `GOOGLE_PLAY_PACKAGE_NAME`,
+   `GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL` (the JSON's `client_email`) and
+   `GOOGLE_PLAY_SERVICE_ACCOUNT_KEY` (its `private_key`). All three or it falls
+   back to the fake verifier — see the update below.
+6. The BFF then calls `androidpublisher.purchases.products.get(packageName,
    productId, token)` and credits only on a *purchased* state.
+
+Permissions do not propagate instantly — allow up to a day before concluding
+something is wrong.
 
 Reads over the Play Developer API are quota-limited (order of 200k/day), which
 is far above anything this rail will produce.
