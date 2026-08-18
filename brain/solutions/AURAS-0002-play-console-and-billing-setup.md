@@ -281,6 +281,11 @@ happens on the first upload, not on creating the app.
 - **Play Billing is likely mandatory** for these top-ups, not optional
   (`AURAD-0010`): the sessions are digital services consumed in-app, so the
   card rail of `AURAF-0009` should not be the Android one.
+- **`versionCode` is spent on upload, not on release.** Play refuses a second
+  AAB carrying a number it has already seen, and the number is invisible to
+  users — `versionName` is the string they read. The first upload used 1;
+  `develop` now carries 2. Bump it *before* building, or find out from a
+  rejected upload.
 - **A tunnel URL is not durable.** It changes on every tunnel restart, and the
   origin is compiled into the AAB — so a tunnel-built upload stops working the
   moment the tunnel is recycled. Fine for proving the rail, not something to
