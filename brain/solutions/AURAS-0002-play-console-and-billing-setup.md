@@ -37,9 +37,31 @@ The launcher label in the build is the short "Aura" on purpose.
 ### 3. Upload the first AAB
 
 ```bash
-cd android && ./gradlew :app:bundleRelease
+cd android
+# A release build must name its target — there is no default (AURAT-0028).
+AURA_ENV=tunnel ./gradlew :app:bundleRelease   # https tunnel to the manor Mac
+AURA_ENV=prod   ./gradlew :app:bundleRelease   # once AURAT-0029 has deployed it
 # → app/build/outputs/bundle/release/app-release.aab
 ```
+
+**This step now also decides which backend the AAB talks to.** Before
+`AURAT-0028` it did not, because it could not: the release bundle compiled in an
+unresolvable placeholder, so an uploaded build reached nothing and this step
+could produce an artifact that proved little. A target with no host, or a
+cleartext `http` host, now fails the build instead.
+
+Until the backend is deployed, use **`tunnel`**: run the BFF on the manor Mac,
+expose it over https (`cloudflared tunnel --url http://localhost:3000`), and put
+the URL in `aura-app/env/.env.tunnel.local` — gitignored, never committed:
+
+```
+AURA_BFF_ORIGIN=https://<subdomain>.trycloudflare.com
+```
+
+`npm run env:show` prints what a target resolves to; run it before building
+rather than discovering the wrong host on a device. The tunnel URL changes every
+time the tunnel restarts, so a re-upload needs a re-build. Details in
+`aura-app/env/README.md`.
 
 Signing comes from `android/keystore.properties`; the upload keystore lives
 outside the repo (see `keystore.properties.example`). Upload to the **internal
@@ -82,6 +104,22 @@ cards and are never charged. They must also be on the internal-testing track
 and install **from Play** — a sideloaded build cannot transact, and that alone
 accounts for most "it doesn't work" reports.
 
+**The uploaded build must have the rollout flags on, or there is nothing to
+transact with**: with them off no wallet or Top Up UI mounts at all. Since
+`AURAT-0028` they are per-build configuration whose committed default is
+`false`, so turning them on is a line in the same gitignored `.local` file, not
+a commit:
+
+```
+AURA_BILLING_ENABLED=true
+AURA_STORE_BILLING_ENABLED=true
+```
+
+The BFF's own `BILLING_ENABLED` must be on too — **both halves are required**,
+and with the server's off every billing route 404s, which the app reads as "not
+live" and hides the UI either way (`AURAD-0002`). Flipping these for real, and
+for whom, stays the owner's call under this file.
+
 ### 7. Server-side verification (unblocks `AURAT-0027`)
 
 1. Play Console → *Setup → API access* → link a Google Cloud project.
@@ -112,7 +150,9 @@ production access and answer the feedback questionnaire.
 Done in `AURAT-0026`: package `cc.silvermind.aura`, an upload keystore and a
 signed AAB, the Firebase Android app with debug + upload SHAs, and the whole
 client purchase flow — dormant behind `STORE_BILLING_ENABLED`, which also
-requires Android, a live wallet and a server-minted `purchaseAccountId`.
+requires Android, a live wallet and a server-minted `purchaseAccountId`. Since
+`AURAT-0028` that flag is build configuration (`AURA_STORE_BILLING_ENABLED`,
+committed `false`) rather than a constant in a tracked source file.
 
 Not done, and not doable from here: every step above.
 
@@ -146,6 +186,35 @@ knowing before running it:
 Step 8 (RTDN) now gates a follow-up task rather than `AURAT-0027`: the refund
 subscriber was deliberately not built against a topic that does not exist.
 
+### Update 2026-08-18 — the AAB now has to name its backend (`AURAT-0028`)
+
+Step 3 used to be runnable with no thought about *where* the uploaded build
+points. That was not a convenience, it was the defect: `__DEV__` is false in a
+release bundle, so every AAB this runbook ever produced compiled in the
+deliberate placeholder `https://bff.invalid`. A licence tester could install it,
+open it, and reach nothing — and no amount of Play Console work would have fixed
+an address baked into the binary.
+
+`AURAT-0028` made the address and both rollout flags per-build configuration
+across three targets (`dev` / `prod` / `tunnel`), and made a misconfigured build
+**fail rather than ship**. Three consequences for this runbook:
+
+- **Step 3's command changed.** A release build with no `AURA_ENV` now stops
+  with an error naming the available targets, instead of silently defaulting.
+  The old one-liner in this file would have failed for anyone following it.
+- **Steps 3–6 became provable before hosting exists.** The `tunnel` target
+  points a real signed release at an https tunnel to the manor Mac, so the whole
+  Play rail — upload, licence tester, real purchase, server verification — can
+  be exercised with the BFF still local and its logs in reach. That is the cheap
+  path to step 7's proof without waiting on `AURAD-0005` / `AURAT-0029`.
+- **Step 6 gained a prerequisite that was previously invisible.** The flags now
+  have to be switched on in the build the testers install, and doing so no
+  longer means editing a tracked file.
+
+When `AURAT-0029` finishes deploying the backend to AWS `eu-central-1`, the work
+here is one line: commit the real origin into `aura-app/env/.env.prod`, which
+until then is deliberately empty and fails the build.
+
 ## Watch out
 
 - **Billing Library 8+ is required for any upload from 31 Aug 2026.** We ship
@@ -156,3 +225,7 @@ subscriber was deliberately not built against a topic that does not exist.
 - **Play Billing is likely mandatory** for these top-ups, not optional
   (`AURAD-0010`): the sessions are digital services consumed in-app, so the
   card rail of `AURAF-0009` should not be the Android one.
+- **A tunnel URL is not durable.** It changes on every tunnel restart, and the
+  origin is compiled into the AAB — so a tunnel-built upload stops working the
+  moment the tunnel is recycled. Fine for proving the rail, not something to
+  leave on a track and forget.
