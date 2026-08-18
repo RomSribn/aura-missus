@@ -53,3 +53,31 @@ features. Exact provider, k8s-vs-VM, and backup/DR are ops details under this
 decision. Chatter provisioning = O6; identity / retention = O5.
 
 Informed by `AURAI-0002`, `AURAD-0004`. Unblocks `AURAF-0007` deployment.
+
+## Provider and topology chosen — 2026-08-18
+
+This decision left "exact provider, k8s-vs-VM, and backup/DR" as ops details
+under itself, so this is a record, not an amendment: nothing above changes.
+
+**AWS `eu-central-1`** (Frankfurt), chosen by the owner over the GCP
+europe-west default. The default's stated reasons were Firebase adjacency and a
+single cloud relationship; neither survives contact:
+
+- Firebase (phone OTP, FCM) and the Play Developer API are public HTTPS and
+  behave identically from any provider — there is no technical adjacency to lose.
+- A GCP project exists **regardless**, because refund notifications
+  (`AURAS-0002` step 8) are Google Cloud Pub/Sub pushing to our HTTPS endpoint.
+  So "one cloud" was never on the table under either choice.
+
+What remains is operator familiarity, which is the owner's, and `eu-central-1`
+keeps the EU-region requirement above intact.
+
+**One VM running docker compose, not Kubernetes.** The whole stack is ~7
+containers — the BFF (its own `Dockerfile`) with Postgres 16 and Redis 7, and
+Chatwoot's rails + sidekiq with its own Postgres and Redis — and it is already
+built and run that way in dev. Kubernetes would add a control plane to maintain
+for capabilities not yet needed: zero-downtime deploys, autoscaling, multi-node
+scheduling. Revisit when chatter count or an uptime requirement makes a rolling
+deploy necessary; that is also the point to consider managed Postgres.
+
+Implementation is `AURAT-0029`.
