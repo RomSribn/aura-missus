@@ -75,16 +75,26 @@ key and yours is only an *upload* key — which is why losing it is recoverable.
 **Done 2026-08-18.** Play Console → *Test and release → Setup → App signing*
 (the old *Setup → App integrity* path is gone; what lives under *Protected with
 Play* is the Integrity/anti-abuse side, not signing keys). *Download
-certificate* yields three `.der` files — **`deployment_cert.der` is the app
-signing certificate**; the `hybrid_classical` and `hybrid_pqc` ones belong to
-Google's post-quantum signing rollout and are not what Firebase wants today.
+certificate* yields three `.der` files. **`deployment_cert.der` is the app
+signing certificate** and the one Play signs with today; `hybrid_classical` and
+`hybrid_pqc` belong to Google's post-quantum signing rollout.
 
-Registered for `cc.silvermind.aura` in Firebase project `aura-2781b`:
+All three are registered for `cc.silvermind.aura` in Firebase project
+`aura-2781b` — ten fingerprints in total, five keys in SHA-1 and SHA-256:
 
 ```
-Play app signing  SHA-1   3441a8d7778bdec6b609fe7b5dbac7673419f953
-                  SHA-256 82f5cd6c…bddd38a8
+debug                            5e8f1606…  fac61745…
+upload                           45957a77…  61c3f587…
+Play app signing (deployment)    3441a8d7…  82f5cd6c…
+Play hybrid classical            11642f9c…  be881e5f…
+Play hybrid PQC                  bf5183db…  f6569815…
 ```
+
+Only the deployment pair is required today. The hybrid pair was added as
+insurance: if Google ever distributes builds signed under the post-quantum
+scheme, the symptom would be phone-OTP failing on Play installs again, and the
+cause would be non-obvious. They cost nothing — they are Google's own keys for
+this same app.
 
 Without it, phone-OTP fails Play Integrity on builds installed **from Play**
 while the same build sideloaded works — an easy failure to misdiagnose.
