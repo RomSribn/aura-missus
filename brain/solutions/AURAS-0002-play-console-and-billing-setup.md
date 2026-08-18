@@ -72,13 +72,41 @@ key and yours is only an *upload* key — which is why losing it is recoverable.
 
 ### 4. Register the Play app-signing certificate in Firebase
 
-Play Console → *Setup → App integrity* → copy the **app signing** certificate's
-SHA-1 and SHA-256, and add them to the Firebase Android app for
-`cc.silvermind.aura`. Without it, phone-OTP fails Play Integrity on builds
-installed **from Play** — while the same build sideloaded works, which makes it
-an easy failure to misdiagnose. (`AURAT-0026` already registered the debug and
-upload certificates; only Google's own is missing, and it does not exist until
-step 3.)
+**Done 2026-08-18.** Play Console → *Test and release → Setup → App signing*
+(the old *Setup → App integrity* path is gone; what lives under *Protected with
+Play* is the Integrity/anti-abuse side, not signing keys). *Download
+certificate* yields three `.der` files — **`deployment_cert.der` is the app
+signing certificate**; the `hybrid_classical` and `hybrid_pqc` ones belong to
+Google's post-quantum signing rollout and are not what Firebase wants today.
+
+Registered for `cc.silvermind.aura` in Firebase project `aura-2781b`:
+
+```
+Play app signing  SHA-1   3441a8d7778bdec6b609fe7b5dbac7673419f953
+                  SHA-256 82f5cd6c…bddd38a8
+```
+
+Without it, phone-OTP fails Play Integrity on builds installed **from Play**
+while the same build sideloaded works — an easy failure to misdiagnose.
+
+Two corrections to what this step used to say, both learned the hard way:
+
+- **The certificate does not wait for step 3.** It is generated when the app is
+  created with Play App Signing enrolled, not on first upload. This file
+  previously claimed otherwise, which sent a session hunting for a missing
+  upload that was not the problem.
+- **`google-services.json` does not carry SHA fingerprints here.** They appear
+  in it only for Google Sign-In OAuth clients, and this app authenticates only
+  by phone. Re-downloading it after touching certificates changes nothing and
+  proves nothing — the state lives in the Firebase project, readable with the
+  Management API (`.../androidApps/{appId}/sha`).
+
+**Watch the form.** Editing an existing fingerprint row instead of adding a new
+one silently deletes it. That happened here: both **debug** fingerprints were
+removed from the app before anyone noticed, which would have broken phone-OTP on
+local debug builds — the exact thing the next device pass runs. They were
+restored from `android/app/debug.keystore`. After any change to this list, read
+it back rather than trusting the form.
 
 ### 5. Create the four products
 
