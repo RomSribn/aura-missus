@@ -142,6 +142,13 @@ cards and are never charged. They must also be on the internal-testing track
 and install **from Play** — a sideloaded build cannot transact, and that alone
 accounts for most "it doesn't work" reports.
 
+**Testers need Spanish phone numbers.** Phone-OTP is the app's only sign-in and
+the Firebase project allows it from exactly one country — `["ES"]`, verified
+live 2026-08-18. A tester elsewhere cannot create an account, so they cannot
+reach the Top Up sheet at all, and the failure looks like "the SMS never
+arrives" rather than anything to do with Play. Recorded as item 1 of the app's
+`TECH-DEBT.md`; widening it is a Firebase Console change plus a cost decision.
+
 **The uploaded build must have the rollout flags on, or there is nothing to
 transact with**: with them off no wallet or Top Up UI mounts at all. Since
 `AURAT-0028` they are per-build configuration whose committed default is
