@@ -215,6 +215,17 @@ When `AURAT-0029` finishes deploying the backend to AWS `eu-central-1`, the work
 here is one line: commit the real origin into `aura-app/env/.env.prod`, which
 until then is deliberately empty and fails the build.
 
+### Update 2026-08-18 — steps 1 and 2 are done
+
+The owner holds an approved developer account and has created the app under
+`cc.silvermind.aura`. The account is an **organisation**, which matters more
+than it looks: it is exempt from the closed-testing requirement in step 1, so
+the 12-testers-for-14-continuous-days clock that would otherwise sit between
+here and production does not apply. Step 9 is a questionnaire, not a fortnight.
+
+Step 3 is therefore the live edge. The package is still not claimed — that
+happens on the first upload, not on creating the app.
+
 ## Watch out
 
 - **Billing Library 8+ is required for any upload from 31 Aug 2026.** We ship

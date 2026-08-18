@@ -27,7 +27,7 @@ This is the **store** rail. `AURAF-0009` is the **card** rail, and per
 | AURAF-0010-004 | me | ✓ | ✓ | ✓ | ✓ |  | A purchase interrupted by a crash, a kill or a dead network is redeemed on the next launch instead of being lost |
 | AURAF-0010-005 | me | ✓ | ✓ | ✓ | — |  | A cancelled purchase is silent; a genuine failure says so and leaves the user's money with Google |
 | AURAF-0010-006 | me | — | ✗ | — | ✗ |  | A refunded or revoked purchase debits the wallet (negative entry; balance may go below zero) |
-| AURAF-0010-007 | me | — | — | — | — |  | Play Console: app created, tiers published, internal-testing track, licence testers — owner runbook, gated on account approval |
+| AURAF-0010-007 | me | — | — | — | — |  | Play Console: app created, tiers published, internal-testing track, licence testers — owner runbook `AURAS-0002`. **Account approved and app created 2026-08-18** (organisation, `cc.silvermind.aura`); the remainder waits on the first upload |
 | AURAF-0010-008 | me | — | ✗ | ✗ | ✗ |  | The same rail on iOS via StoreKit — deferred until Apple's review clears |
 
 `App` = approved against the source of truth (`AURAD-0010`), `Own` = owner
