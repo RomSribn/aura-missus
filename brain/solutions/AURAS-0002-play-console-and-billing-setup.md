@@ -121,6 +121,31 @@ Not done, and not doable from here: every step above.
 Steps 1–3 are the unblocking sequence; nothing else can start until an AAB is
 on a track. Step 7 is what `AURAT-0027` waits on.
 
+### Update 2026-08-17 — the BFF half is built, so step 7 is now the only blocker
+
+`AURAT-0027` shipped the server side: `POST /v1/wallet/top-ups/google`, the
+server-side tier table, the `purchaseToken` unique constraint, and
+`purchaseAccountId` on `GET /v1/wallet` — the last of which is what lets the app
+switch the rail on at all. The real Play Developer API client is written too;
+it has simply never been given credentials.
+
+So **step 7 no longer unblocks work, it unblocks proof**. Two consequences worth
+knowing before running it:
+
+- Hand the JSON key to the BFF as `GOOGLE_PLAY_PACKAGE_NAME`,
+  `GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL` and `GOOGLE_PLAY_SERVICE_ACCOUNT_KEY`
+  (the JSON's `private_key`). **A production deployment with `BILLING_ENABLED`
+  on now refuses to boot without all three** — deliberately: the fallback is a
+  dev verifier, and a dev verifier that credits real money is the mistake
+  `AURAD-0010` exists to prevent.
+- The first real purchase is the moment to check that Google actually returns
+  `obfuscatedExternalAccountId`. The entire "user A cannot redeem user B's
+  token" guarantee rests on that field arriving, and no test we can run proves
+  it does.
+
+Step 8 (RTDN) now gates a follow-up task rather than `AURAT-0027`: the refund
+subscriber was deliberately not built against a topic that does not exist.
+
 ## Watch out
 
 - **Billing Library 8+ is required for any upload from 31 Aug 2026.** We ship
