@@ -181,6 +181,8 @@ Android Developer API for you.** Nothing does now. Verified on 2026-08-18 that
 1. **Google Cloud → APIs & Services → enable `androidpublisher.googleapis.com`**
    (Google Play Android Developer API), in the project that will own the service
    account. This is the step the old linking did implicitly.
+   **Done for `aura-2781b` on 2026-08-18** (`gcloud services enable`, verified
+   present in the enabled list).
 2. **Google Cloud → IAM & Admin → Service Accounts** → create a dedicated one.
    Do not reuse `firebase-adminsdk-fbsvc@aura-2781b…`: it already holds the keys
    to auth, and a leaked key should not cost both.
