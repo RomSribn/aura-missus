@@ -32,7 +32,7 @@ This is the **store** rail. `AURAF-0009` is the **card** rail, and per
 
 `App` = approved against the source of truth (`AURAD-0010`), `Own` = owner
 ratified. Rows 001–005 are `AURAT-0026` (app) + `AURAT-0027` (BFF); row 006 is
-**not** `AURAT-0027` — see below; row 007 is the owner; row 008 has no task.
+**`AURAT-0030`**, not `AURAT-0027` — see below; row 007 is the owner; row 008 has no task.
 
 Row 003's `BE` was corrected `✗ → —`: the localized price comes from
 `fetchProducts` against Play and the BFF has no part in it, so there was never
@@ -55,7 +55,15 @@ exist, and unlike the verifier it has no reachable trigger at all — it would b
 dead code, which the build rules forbid. `AURAT-0027`'s schema already
 accommodates it: a refund is a new negative `ledger_entries` row, and
 `play_purchases` links a token to the credit it paid for, so the follow-up is
-one migration plus a processor. Needs an ID minted in `aura-app-manor`.
+one migration plus a processor.
+
+**Minted 2026-08-19 as `AURAT-0030`** (bff-play-refund-subscriber), executing in
+`aura-bff-manor`. Its brief names three things to settle before code: whether the
+subscription is *push* (a new public route that must verify Google's signed OIDC
+token — an unverified refund endpoint is a way for anyone to zero a wallet) or
+*pull* (a job, no public surface); how the refund entry links back, since
+`play_purchases.ledgerEntryId` is `@unique` and 1:1 with the credit; and whether a
+refund should reach Chatwoot at all.
 
 ## NOT in scope
 
