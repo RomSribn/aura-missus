@@ -229,3 +229,66 @@ until then is deliberately empty and fails the build.
   origin is compiled into the AAB — so a tunnel-built upload stops working the
   moment the tunnel is recycled. Fine for proving the rail, not something to
   leave on a track and forget.
+
+## Update 2026-08-19 — step 7 as it actually goes now
+
+Done during `AURAT-0029`, and three things differ from what this document says.
+
+**"Setup → API access" no longer exists.** Google removed the page; the direct
+links redirect to Home. The service account is created in **Google Cloud
+Console**, and access to the app is granted in **Play Console → Users and
+permissions → Invite new users**, pasting the service account's email like any
+other user. Its App permissions need *View financial data, orders, and
+cancellation survey responses* and *Manage orders and subscriptions* — account
+level permissions are not required.
+
+**Creating the service account is not the same as creating its key.** A service
+account can sit in Cloud Console showing `No keys` — the account exists, the
+credential does not, and there is nothing to download. Keys → Add key → Create
+new key → JSON. It is shown once.
+
+**Verify the credential before turning billing on**, because the two failures
+look identical from the app and only one of them is yours to fix. A valid key
+that has not been granted app access authenticates fine and then gets
+`401 insufficient permissions` on every purchase — the buyer is charged and the
+wallet is not credited.
+
+The check, against a deliberately invalid purchase token:
+
+```bash
+node -e '
+const {GoogleAuth} = require("google-auth-library");
+const d = require("/path/to/play-service-account.json");
+(async () => {
+  const auth = new GoogleAuth({ credentials: d,
+    scopes: ["https://www.googleapis.com/auth/androidpublisher"] });
+  const client = await auth.getClient();
+  const res = await client.request({ validateStatus: () => true, url:
+    "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/"
+    + "cc.silvermind.aura/purchases/products/aura.topup.usd10/tokens/probe-invalid" });
+  console.log(res.status);
+})();'
+```
+
+Read it this way:
+
+| Status | Meaning |
+|---|---|
+| **404** (or 400) | **Correct.** Google accepted the request and says that token does not exist — which is the truth about an invented one. Access works |
+| 401 / 403 | The account has no access to this app in Play Console, or the grant has not propagated yet (allow a few minutes) |
+| failure before any status | The key itself is wrong |
+
+Only after a 404 does `BILLING_ENABLED=true` make sense. Before it, the service
+refuses to boot anyway — deliberately (`AURAD-0010`), because the fallback is
+the dev verifier and a fake verifier that credits real money is the one
+unrecoverable mistake.
+
+**Also seen, and unrelated to any of the above:** Play Console showed *"There is
+an issue with your payments profile"*. That blocks real purchases regardless of
+how correct the API access is; it is fixed under Payments settings.
+
+**Values for this app:** `GOOGLE_PLAY_PACKAGE_NAME=cc.silvermind.aura`, and the
+service account is `play-billing-api@aura-2781b` — the **same GCP project as
+Firebase** but a **different** service account. The Firebase one verifies ID
+tokens; this one verifies purchases. They are not interchangeable, and the
+similarity is the easiest way to lose an hour here.
