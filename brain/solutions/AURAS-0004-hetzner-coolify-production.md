@@ -168,12 +168,19 @@ Three things to know:
 
 - **The deployed branch is `feature/AURAT-0029-aws-deploy`.** After the merge,
   point Coolify at `develop` or it keeps deploying the feature branch.
+- **One push redeploys BOTH services.** The Chatwoot application is git-backed
+  too — same repository, same branch, `docker_compose_location =
+  /deploy/coolify/chatwoot.compose.yml`. Coolify re-reads that file on every
+  push, so a commit touching only the BFF still recreates the Chatwoot
+  containers. Convenient (editing the compose in the repo *is* deploying it)
+  and easy to forget: there is no such thing here as a push that touches only
+  one service.
 - **There is no gate.** A push with a bad migration reaches production.
 - **Rolling updates**: the new container starts while the old one serves. An
   additive migration survives that window; a destructive one does not. Use
   expand/contract when the first destructive migration appears.
 
-### Two traps this platform sets
+### Three traps this platform sets
 
 **Coolify injects the environment into the image build.** `NODE_ENV=production`
 reached `npm ci` in the build stage, npm skipped devDependencies, and the build
@@ -186,6 +193,25 @@ variable build-time by default; Docker warns
 `SecretsUsedInArgOrEnv`, and `docker history` would show the Firebase key and
 Chatwoot token in clear text. The build needs none of them — **all
 runtime-only**.
+
+**Coolify escapes the backslash when it writes the generated `.env`.** A PEM
+private key stored correctly in its database as `\n` arrives in the container
+as `\\n`. A single unescape then leaves a stray backslash at the end of every
+PEM line and the key stops parsing — 1760 characters where the stored value has
+1732, one extra per line. This cost an evening, because of how it fails: the
+Firebase app is built **lazily**, so `cert()` throws on the first request rather
+than at boot, a bare `catch` in the auth guard rendered it as `Invalid or
+expired token`, and the service answered 401 to **every** user while `/health`
+stayed green and the panel showed it healthy. The app just said "couldn't load
+advisors".
+
+Fixed at the boundary, not in each consumer: `pemPrivateKey()` in
+`env.schema.ts` collapses escaped newlines however many times the platform
+escaped them and **proves the key parses**, so a bad key now fails the boot
+instead of every request. Two consequences worth keeping: never "fix" such a
+value by hand in the panel — Coolify re-escapes it on the next regeneration, so
+the normaliser is the only durable fix; and after changing anything about a key,
+check the *container's* value, not the panel's, since they differ by design.
 
 Related and separate: **a panel cannot express "absent"**. An unset variable is
 stored as an empty string, and `validateEnv` now drops empty values before
@@ -280,6 +306,9 @@ all; the services unescape them.
 |---|---|
 | Deployment failed and the logs are gone | Coolify removes a failed deployment's containers **and its network**. Read Deployment Logs in the panel immediately, or reproduce the step in an isolated container against the generated compose in `/data/coolify/applications/<uuid>/` |
 | BFF exits listing variable names | Config validation. A variable is missing or empty in the panel |
+| BFF exits naming a private key | The key does not parse. Read it **inside the container**, not in the panel — see the escaping trap above |
+| Every authenticated route 401s, `/health` green, app shows "couldn't load advisors" | Firebase credential, not the token. The guard logs the reason: `app/invalid-credential` is ours to fix, `auth/*` is the caller's. Response body length also tells them apart — 74 bytes is a missing header, 78 a rejected token |
+| `EAI_AGAIN chatwoot-rails` in BFF logs | The alias is gone. Coolify's only automatic alias is the bare service name `rails`; `chatwoot-rails` is claimed explicitly in the compose |
 | `sh: nest: not found` | A build-time `NODE_ENV=production`; see the Dockerfile note above |
 | Agent replies show "Failed to send · Hostname has no public ip addresses" | `SAFE_FETCH_ALLOW_PRIVATE_NETWORK` missing on rails **or** sidekiq |
 | App gets 429s under light load | `trustProxy` regression — every device sharing one rate-limit budget |
@@ -293,7 +322,10 @@ all; the services unescape them.
 ## Not yet proven
 
 - **The chat loop has never run end to end**: app → BFF → Chatwoot → chatter's
-  reply → app. With it goes the first real exercise of the inbox webhook.
+  reply → app. With it goes the first real exercise of the inbox webhook. Until
+  2026-08-20 it could not have: `CHATWOOT_BASE_URL` named a host that did not
+  resolve, so every BFF→Chatwoot call failed. The name now resolves and answers
+  200 from inside the BFF, which makes the loop *possible* — not proven.
 - **No real purchase has been verified.** `TECH-DEBT #17` is only partly paid —
   the verifier has spoken to Google and been correctly refused, but no genuine
   token has been redeemed. On the first one, check that
