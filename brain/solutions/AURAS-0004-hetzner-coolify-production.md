@@ -228,16 +228,32 @@ present value that fails `.min(1)`.
   up by name (which would have created a second one).
 - Its **own** `Channel::Api` inbox (`AURAD-0005`: one per environment), service
   User and Agent Bot, provisioned by `deploy/chatwoot/provision-prod.rb`. The
-  webhook points at **`http://bff:3000/webhooks/chatwoot`** — internal, never
-  public.
-- **`SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true`.** Chatwoot ≥4.15 routes every
-  outgoing webhook through SafeFetch/ssrf_filter, which refuses private
-  addresses — and this webhook is one. `AURAS-0001` says never to set this
-  outside dev; that advice assumed a public webhook URL, which this topology
-  deliberately does not have. **Still an assertion: the webhook has never
-  fired.** The failure mode to watch for is *"Failed to send · Hostname has no
-  public ip addresses"* on an agent reply, and check **both** rails and sidekiq
-  carry the variable.
+  webhook points at **`https://bff.aura-app.cc/webhooks/chatwoot`** — the
+  public hostname, deliberately, and it is **proven**: a real delivery returned
+  `204` with the signature verified.
+
+  It started as `http://bff:3000/webhooks/chatwoot` and never worked, because
+  **Coolify gives a Dockerfile application no stable network name**. Its only
+  alias is the container name with the deploy id appended
+  (`mtnsnawmogikfwm0uvl1g1yc-223125307803`), which changes on every deploy, and
+  `--network-alias` is not among the custom docker run options Coolify accepts
+  (`convertDockerRunToCompose` allows `--cap-add`, `--sysctl`, `--hostname`,
+  `--dns` and a handful more — not that one). A compose-based application can
+  claim an alias, which is how the BFF reaches Chatwoot; the reverse direction
+  has no such lever.
+
+  So the webhook takes the public hostname and hairpins back through Traefik.
+  Nothing is newly exposed — the BFF already serves that host — and the
+  endpoint verifies `X-Chatwoot-Signature` before trusting a byte: an unsigned
+  POST gets `401`.
+
+- **`SAFE_FETCH_ALLOW_PRIVATE_NETWORK` is no longer needed.** Chatwoot ≥4.15
+  routes every outgoing webhook through SafeFetch/ssrf_filter, which refuses
+  private addresses — which is why the flag went in while the webhook used a
+  Docker-network address. With a public webhook URL that reason is simply gone,
+  so `AURAS-0001`'s rule ("never outside dev") applies again unweakened and the
+  flag is removed from the compose. Turning Chatwoot's SSRF protection back on
+  is the point; it is not a cleanup.
 - **Attachments go to R2** (`s3_compatible`, `STORAGE_ENDPOINT` with the `.eu`
   segment EU-jurisdiction buckets require). A container filesystem is not
   storage: it is lost on every redeploy.
@@ -310,7 +326,8 @@ all; the services unescape them.
 | Every authenticated route 401s, `/health` green, app shows "couldn't load advisors" | Firebase credential, not the token. The guard logs the reason: `app/invalid-credential` is ours to fix, `auth/*` is the caller's. Response body length also tells them apart — 74 bytes is a missing header, 78 a rejected token |
 | `EAI_AGAIN chatwoot-rails` in BFF logs | The alias is gone. Coolify's only automatic alias is the bare service name `rails`; `chatwoot-rails` is claimed explicitly in the compose |
 | `sh: nest: not found` | A build-time `NODE_ENV=production`; see the Dockerfile note above |
-| Agent replies show "Failed to send · Hostname has no public ip addresses" | `SAFE_FETCH_ALLOW_PRIVATE_NETWORK` missing on rails **or** sidekiq |
+| Agent reply marked "Failed to send", but the app received it anyway | The reconciliation poll covered for a broken webhook — exactly what it is for. Check the inbox `webhook_url` and the Agent Bot `outgoing_url`; both must be the public URL |
+| `Could not resolve hostname 'bff'` on a message | The webhook is pointed at a Docker-network name. Coolify cannot give this application one — use `https://bff.aura-app.cc/webhooks/chatwoot` |
 | App gets 429s under light load | `trustProxy` regression — every device sharing one rate-limit budget |
 | Wallet routes answer 404 | `BILLING_ENABLED` is false. 401 is the healthy answer |
 | Purchase charged but not credited | Play financial permission — probe as above |
