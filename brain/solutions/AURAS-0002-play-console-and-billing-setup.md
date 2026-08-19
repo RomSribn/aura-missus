@@ -72,13 +72,51 @@ key and yours is only an *upload* key — which is why losing it is recoverable.
 
 ### 4. Register the Play app-signing certificate in Firebase
 
-Play Console → *Setup → App integrity* → copy the **app signing** certificate's
-SHA-1 and SHA-256, and add them to the Firebase Android app for
-`cc.silvermind.aura`. Without it, phone-OTP fails Play Integrity on builds
-installed **from Play** — while the same build sideloaded works, which makes it
-an easy failure to misdiagnose. (`AURAT-0026` already registered the debug and
-upload certificates; only Google's own is missing, and it does not exist until
-step 3.)
+**Done 2026-08-18.** Play Console → *Test and release → Setup → App signing*
+(the old *Setup → App integrity* path is gone; what lives under *Protected with
+Play* is the Integrity/anti-abuse side, not signing keys). *Download
+certificate* yields three `.der` files. **`deployment_cert.der` is the app
+signing certificate** and the one Play signs with today; `hybrid_classical` and
+`hybrid_pqc` belong to Google's post-quantum signing rollout.
+
+All three are registered for `cc.silvermind.aura` in Firebase project
+`aura-2781b` — ten fingerprints in total, five keys in SHA-1 and SHA-256:
+
+```
+debug                            5e8f1606…  fac61745…
+upload                           45957a77…  61c3f587…
+Play app signing (deployment)    3441a8d7…  82f5cd6c…
+Play hybrid classical            11642f9c…  be881e5f…
+Play hybrid PQC                  bf5183db…  f6569815…
+```
+
+Only the deployment pair is required today. The hybrid pair was added as
+insurance: if Google ever distributes builds signed under the post-quantum
+scheme, the symptom would be phone-OTP failing on Play installs again, and the
+cause would be non-obvious. They cost nothing — they are Google's own keys for
+this same app.
+
+Without it, phone-OTP fails Play Integrity on builds installed **from Play**
+while the same build sideloaded works — an easy failure to misdiagnose.
+
+Two corrections to what this step used to say, both learned the hard way:
+
+- **The certificate does not wait for step 3.** It is generated when the app is
+  created with Play App Signing enrolled, not on first upload. This file
+  previously claimed otherwise, which sent a session hunting for a missing
+  upload that was not the problem.
+- **`google-services.json` does not carry SHA fingerprints here.** They appear
+  in it only for Google Sign-In OAuth clients, and this app authenticates only
+  by phone. Re-downloading it after touching certificates changes nothing and
+  proves nothing — the state lives in the Firebase project, readable with the
+  Management API (`.../androidApps/{appId}/sha`).
+
+**Watch the form.** Editing an existing fingerprint row instead of adding a new
+one silently deletes it. That happened here: both **debug** fingerprints were
+removed from the app before anyone noticed, which would have broken phone-OTP on
+local debug builds — the exact thing the next device pass runs. They were
+restored from `android/app/debug.keystore`. After any change to this list, read
+it back rather than trusting the form.
 
 ### 5. Create the four products
 
@@ -104,6 +142,13 @@ cards and are never charged. They must also be on the internal-testing track
 and install **from Play** — a sideloaded build cannot transact, and that alone
 accounts for most "it doesn't work" reports.
 
+**Testers need Spanish phone numbers.** Phone-OTP is the app's only sign-in and
+the Firebase project allows it from exactly one country — `["ES"]`, verified
+live 2026-08-18. A tester elsewhere cannot create an account, so they cannot
+reach the Top Up sheet at all, and the failure looks like "the SMS never
+arrives" rather than anything to do with Play. Recorded as item 1 of the app's
+`TECH-DEBT.md`; widening it is a Firebase Console change plus a cost decision.
+
 **The uploaded build must have the rollout flags on, or there is nothing to
 transact with**: with them off no wallet or Top Up UI mounts at all. Since
 `AURAT-0028` they are per-build configuration whose committed default is
@@ -122,12 +167,38 @@ for whom, stays the owner's call under this file.
 
 ### 7. Server-side verification (unblocks `AURAT-0027`)
 
-1. Play Console → *Setup → API access* → link a Google Cloud project.
-2. Create a service account; grant it **View financial data** and
-   *Manage orders and subscriptions* on the app.
-3. Download the JSON key and hand it to the BFF as a secret.
-4. The BFF calls `androidpublisher.purchases.products.get(packageName,
+**The console flow changed — the owner found this 2026-08-18.** Play Console no
+longer has a *Setup → API access* page, and no longer asks you to link a Google
+Cloud project. The service account is now created in Google Cloud directly and
+granted its rights from Play Console's *Users and permissions*.
+
+That removes a step and adds a trap: **linking used to enable the Google Play
+Android Developer API for you.** Nothing does now. Verified on 2026-08-18 that
+`androidpublisher.googleapis.com` is *not* among the 40 APIs enabled on
+`aura-2781b` — so without this, the BFF's first real verification fails with a
+`403 SERVICE_DISABLED` at the worst possible moment.
+
+1. **Google Cloud → APIs & Services → enable `androidpublisher.googleapis.com`**
+   (Google Play Android Developer API), in the project that will own the service
+   account. This is the step the old linking did implicitly.
+   **Done for `aura-2781b` on 2026-08-18** (`gcloud services enable`, verified
+   present in the enabled list).
+2. **Google Cloud → IAM & Admin → Service Accounts** → create a dedicated one.
+   Do not reuse `firebase-adminsdk-fbsvc@aura-2781b…`: it already holds the keys
+   to auth, and a leaked key should not cost both.
+3. **Keys → Add key → JSON** → download.
+4. **Play Console → Users and permissions → Invite new user** → paste the
+   service account's email → grant it, on `cc.silvermind.aura`, **View financial
+   data** and **Manage orders and subscriptions**.
+5. Hand the BFF `GOOGLE_PLAY_PACKAGE_NAME`,
+   `GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL` (the JSON's `client_email`) and
+   `GOOGLE_PLAY_SERVICE_ACCOUNT_KEY` (its `private_key`). All three or it falls
+   back to the fake verifier — see the update below.
+6. The BFF then calls `androidpublisher.purchases.products.get(packageName,
    productId, token)` and credits only on a *purchased* state.
+
+Permissions do not propagate instantly — allow up to a day before concluding
+something is wrong.
 
 Reads over the Play Developer API are quota-limited (order of 200k/day), which
 is far above anything this rail will produce.
@@ -215,6 +286,17 @@ When `AURAT-0029` finishes deploying the backend to AWS `eu-central-1`, the work
 here is one line: commit the real origin into `aura-app/env/.env.prod`, which
 until then is deliberately empty and fails the build.
 
+### Update 2026-08-18 — steps 1 and 2 are done
+
+The owner holds an approved developer account and has created the app under
+`cc.silvermind.aura`. The account is an **organisation**, which matters more
+than it looks: it is exempt from the closed-testing requirement in step 1, so
+the 12-testers-for-14-continuous-days clock that would otherwise sit between
+here and production does not apply. Step 9 is a questionnaire, not a fortnight.
+
+Step 3 is therefore the live edge. The package is still not claimed — that
+happens on the first upload, not on creating the app.
+
 ## Watch out
 
 - **Billing Library 8+ is required for any upload from 31 Aug 2026.** We ship
@@ -225,6 +307,11 @@ until then is deliberately empty and fails the build.
 - **Play Billing is likely mandatory** for these top-ups, not optional
   (`AURAD-0010`): the sessions are digital services consumed in-app, so the
   card rail of `AURAF-0009` should not be the Android one.
+- **`versionCode` is spent on upload, not on release.** Play refuses a second
+  AAB carrying a number it has already seen, and the number is invisible to
+  users — `versionName` is the string they read. The first upload used 1;
+  `develop` now carries 2. Bump it *before* building, or find out from a
+  rejected upload.
 - **A tunnel URL is not durable.** It changes on every tunnel restart, and the
   origin is compiled into the AAB — so a tunnel-built upload stops working the
   moment the tunnel is recycled. Fine for proving the rail, not something to
