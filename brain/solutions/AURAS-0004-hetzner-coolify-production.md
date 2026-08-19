@@ -254,6 +254,32 @@ present value that fails `.min(1)`.
   so `AURAS-0001`'s rule ("never outside dev") applies again unweakened and the
   flag is removed from the compose. Turning Chatwoot's SSRF protection back on
   is the point; it is not a cleanup.
+- **The Agent Bot is attached but its inbox link is INACTIVE — on purpose.**
+  It was added for one thing: its `outgoing_url` retries (only on 429/500 —
+  `Webhooks::Trigger::RETRYABLE_AGENT_BOT_STATUSES`), while the inbox webhook is
+  fire-and-forget. The catch nobody priced in: attaching *any* agent bot marks
+  the inbox bot-driven, and every conversation is then born **`pending`**
+  (`Conversation#ensure_conversation_status`, carrying Chatwoot's own TODO
+  calling it an assumption). `pending` conversations are absent from the default
+  Open filter, and an incoming message does **not** open them — only a manual
+  toggle does.
+
+  So a bot attached purely for retries would have hidden real messages from the
+  chatters. It never did, for an unlovely reason: the bot's webhook was failing
+  — it signs with `agent_bot.secret`, not the channel secret, so the BFF
+  answered 401 — and Chatwoot force-opens a conversation when its bot errors.
+  The visible conversation list was a product of the breakage.
+
+  The retry is redundant anyway: the reconciliation poll covers gaps and has
+  already carried a complete webhook outage here. The link is therefore
+  `inactive`; the bot record and its token stay, so re-enabling is one field.
+  Turn it back on only when there is a **real** bot — something that answers or
+  routes before a human — and make it hand off to `open` itself. `AURAD-0005`
+  attached the bot; this narrows *how*, not whether.
+
+  If it is ever re-enabled, the BFF also needs
+  `CHATWOOT_WEBHOOK_SECRET_SECONDARY` set to the bot's secret — the verifier
+  already accepts a second secret for exactly this.
 - **Attachments go to R2** (`s3_compatible`, `STORAGE_ENDPOINT` with the `.eu`
   segment EU-jurisdiction buckets require). A container filesystem is not
   storage: it is lost on every redeploy.
@@ -328,6 +354,8 @@ all; the services unescape them.
 | `sh: nest: not found` | A build-time `NODE_ENV=production`; see the Dockerfile note above |
 | Agent reply marked "Failed to send", but the app received it anyway | The reconciliation poll covered for a broken webhook — exactly what it is for. Check the inbox `webhook_url` and the Agent Bot `outgoing_url`; both must be the public URL |
 | `Could not resolve hostname 'bff'` on a message | The webhook is pointed at a Docker-network name. Coolify cannot give this application one — use `https://bff.aura-app.cc/webhooks/chatwoot` |
+| "Conversation was marked open by system due to an error with the agent bot" | The agent bot's webhook failed. It should not be running at all — check `AgentBotInbox.status` is `inactive` |
+| Chatters see nothing under "Open" while users are writing | An agent bot is active on the inbox, so conversations are born `pending`. Deactivate the link, then open the stranded ones |
 | App gets 429s under light load | `trustProxy` regression — every device sharing one rate-limit budget |
 | Wallet routes answer 404 | `BILLING_ENABLED` is false. 401 is the healthy answer |
 | Purchase charged but not credited | Play financial permission — probe as above |
