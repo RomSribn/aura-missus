@@ -3,8 +3,18 @@
 Date: 2026-08-19
 Kind: BFF task. **ID minted in `aura-app-manor`** (the counter authority,
 `AURAD-0006`); the work happens in **`aura-bff-manor`**.
-Status: not started — blocked on `AURAS-0002` step 8 (Pub/Sub topic), which is
-itself downstream of step 7 (service account).
+Status: not started — blocked on `AURAS-0002` step 8 (Pub/Sub topic).
+
+> **Step 7 is no longer part of that chain: it was completed 2026-08-19** during
+> `AURAT-0029`. The service account `play-billing-api@aura-2781b` exists, holds a
+> key, is granted *View financial data* and *Manage orders and subscriptions* on
+> `cc.silvermind.aura`, and was verified against Google before
+> `BILLING_ENABLED=true` went live. So this task now waits only on step 8.
+>
+> Step 8 also gained its missing prerequisite: it needs a **public HTTPS
+> endpoint** for the Pub/Sub push subscription, and there is one —
+> `https://bff.aura-app.cc` (`AURAS-0004`). Both of this task's blockers were
+> infrastructure, and the infrastructure now exists.
 
 ## What
 
