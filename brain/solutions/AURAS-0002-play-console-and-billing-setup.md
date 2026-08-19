@@ -316,3 +316,70 @@ happens on the first upload, not on creating the app.
   origin is compiled into the AAB — so a tunnel-built upload stops working the
   moment the tunnel is recycled. Fine for proving the rail, not something to
   leave on a track and forget.
+
+
+## Update 2026-08-19 — step 7 executed, and how to know it worked
+
+Done during `AURAT-0029`. Step 7 above is accurate; this adds only what it does
+not cover.
+
+**Verify the credential before turning `BILLING_ENABLED` on**, because the
+failure modes are indistinguishable from the app and only some are yours to fix.
+A valid key without app access authenticates fine and then returns 401 on every
+purchase — **the buyer is charged and the wallet is not credited**, and the
+ledger is append-only.
+
+Probe with a deliberately invalid purchase token:
+
+```bash
+node -e '
+const {GoogleAuth} = require("google-auth-library");
+const d = require("/path/to/play-service-account.json");
+(async () => {
+  const auth = new GoogleAuth({ credentials: d,
+    scopes: ["https://www.googleapis.com/auth/androidpublisher"] });
+  const c = await auth.getClient();
+  const base = "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/cc.silvermind.aura";
+  for (const [n,u] of [["purchases", base+"/purchases/products/aura.topup.usd10/tokens/probe-invalid"],
+                       ["edits",     base+"/edits"]]) {
+    const r = await c.request({ url: u, method: n==="edits"?"POST":"GET", data: {}, validateStatus: () => true });
+    console.log(n, r.status);
+  }
+})();'
+```
+
+| purchases | edits | Meaning |
+|---|---|---|
+| **400 / 404** | 200 | **Correct.** Google accepted the request and rejected the invented token |
+| 401 / 403 | **200** | app access works; the **financial** permission specifically has not propagated |
+| 401 / 403 | 401 | no app access at all, or the invitation was never saved |
+| error before any status | — | the key itself is wrong |
+
+Comparing the two endpoints is what makes the diagnosis quick — otherwise a
+financial-permission delay looks identical to a broken key. **Propagation took
+~12 minutes** here; Google documents up to 24 hours, so a fresh 401 is not
+evidence of a mistake.
+
+**A service account can exist with no key at all.** Cloud Console listed
+`play-billing-api@aura-2781b` as Enabled while its Key ID column read `No keys` —
+the account existed, the credential did not, and there was nothing to download.
+Creating the account and creating its key are separate actions, and the key is
+shown once.
+
+**Account-level permissions are not needed** — app-level *View financial data*
+and *Manage orders and subscriptions* on `cc.silvermind.aura` are sufficient, and
+the credential lives in a server's environment, so a grant spanning every app in
+the developer account buys nothing.
+
+**Values in production:** `GOOGLE_PLAY_PACKAGE_NAME=cc.silvermind.aura`,
+`play-billing-api@aura-2781b`. `BILLING_ENABLED=true` since 2026-08-19; the BFF
+logs no "No Play service account configured" warning, and `GET /v1/wallet`
+answers 401 rather than the 404 the flag-off state returns.
+
+**Unrelated and still open:** Play Console reports *"There is an issue with your
+payments profile"*, which blocks real purchases regardless of API access.
+
+**`TECH-DEBT #17` is only partly paid.** The verifier has now spoken to Google
+and been correctly refused — but no genuine purchase token has been redeemed. On
+the first real one, check that `obfuscatedExternalAccountId` comes back: the
+"user A cannot redeem user B's token" guarantee rests on that field arriving.

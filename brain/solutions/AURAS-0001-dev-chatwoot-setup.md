@@ -120,6 +120,15 @@ CHATWOOT_AGENT_BOT_TOKEN=<agent bot access token>
   mode. Dev compose must set **`SAFE_FETCH_ALLOW_PRIVATE_NETWORK: 'true'`** on the
   rails+sidekiq env (gate: chatwoot `lib/safe_fetch.rb`, `fetcher.rb`). Never set
   it in staging/prod — there the BFF webhook URL is public.
+  **Amended 2026-08-18 by `AURAT-0029` — that last sentence is now wrong for
+  production.** The AWS deployment (`AURAS-0003`) keeps the BFF off the public
+  internet entirely; Chatwoot reaches it at `http://bff:3000/webhooks/chatwoot`
+  over the Docker network, which is a private address, so **production sets the
+  flag too**. The risk it opens is real and is paid for at the instance rather
+  than ignored: IMDSv2 is required and the metadata hop limit is 1, so a
+  container cannot reach `169.254.169.254` at all. See
+  `deploy/env/chatwoot.env.example` and `AURAS-0003` step 4. The original
+  advice still holds wherever the webhook URL *is* public.
 
 ## Sanity check (optional; full loop is AURAT-0005)
 
@@ -130,7 +139,9 @@ Order messages by `id` — no cross-message ordering guarantee (`AURAI-0002` §2
 ## Out of scope / notes
 
 - Staging/prod each get their **own** `Channel::Api` inbox with independent secrets
-  + webhook target (`AURAD-0005`).
+  + webhook target (`AURAD-0005`). Production's is provisioned by
+  `aura-bff/deploy/chatwoot/provision-prod.rb` — this script's descendant —
+  and named `Aura (prod)`; see `AURAS-0003` step 8.
 - Chatter provisioning (real agents) = **O6**; not needed to unblock `AURAT-0004`.
 - This prepares the desk only; wiring the BFF against it is `AURAT-0004`
   (contact/conversation mapping) → `AURAT-0005` (messaging + webhook).
