@@ -283,12 +283,39 @@ present value that fails `.min(1)`.
 - **Attachments go to R2** (`s3_compatible`, `STORAGE_ENDPOINT` with the `.eu`
   segment EU-jurisdiction buckets require). A container filesystem is not
   storage: it is lost on every redeploy.
+
+  **`AWS_REQUEST_CHECKSUM_CALCULATION=when_required` is load-bearing. Without it
+  not one attachment can be stored.** `aws-sdk-s3` 1.208 defaults
+  `request_checksum_calculation` to `when_supported`, so it attaches its own
+  CRC32 to every PutObject — while ActiveStorage independently sends
+  `Content-MD5`. R2 accepts one checksum, not two, and rejects the request:
+  `InvalidRequest: You can only specify one non-default checksum at a time.`
+
+  Budget an hour if you meet this without knowing it, because **every signal
+  lies**. Rails logs `S3 Storage … Uploaded file to key: …` for the upload that
+  just failed — ActiveStorage's instrumentation logs its event even when the
+  block inside raised. The message row keeps an attachment pointing at an object
+  that does not exist. Chatwoot answers `422` and the dashboard shows the file as
+  **sent**, so the chatter believes it arrived. The only honest signal is the
+  response body, and it is not in the logs: reproduce the POST with
+  `api_access_token` and read it.
+
+  Diagnose it by **outcome, not by log**: `ActiveStorage::Blob.service.exist?
+  (blob.key)`. If blob rows exist and the objects do not, this is it.
+
+  **CORS on the bucket is NOT the cause and is not needed.** This was an hour's
+  wrong turn on 2026-08-20: the `direct_uploads` route is mounted and blob rows
+  carry a checksum, which together look exactly like browser-direct upload. They
+  are not. Chatwoot's dashboard posts the file as ordinary multipart to Rails —
+  `POST …/messages` with `"attachments" => [ActionDispatch::Http::UploadedFile]`
+  — and Rails uploads it server-side, where CORS never applies. One look at the
+  request log settles it; inference from the route table does not.
 - **Mail via Resend** — free tier, EU region, domain verified, an actual message
   delivered. Without it Chatwoot cannot invite an agent, reset a password, or
   tell an operator a conversation is waiting, and all three fail silently.
   Adding a colleague: **Settings → Agents → Add Agent**, role **Agent** — not
-  Administrator, since administrators can configure webhooks and the SSRF guard
-  is relaxed here.
+  Administrator, since administrators can configure webhooks. An agent must also
+  be **added to the inbox explicitly**, or they cannot reply in it.
 
 ---
 
@@ -351,6 +378,9 @@ all; the services unescape them.
 | BFF exits naming a private key | The key does not parse. Read it **inside the container**, not in the panel — see the escaping trap above |
 | Every authenticated route 401s, `/health` green, app shows "couldn't load advisors" | Firebase credential, not the token. The guard logs the reason: `app/invalid-credential` is ours to fix, `auth/*` is the caller's. Response body length also tells them apart — 74 bytes is a missing header, 78 a rejected token |
 | `EAI_AGAIN chatwoot-rails` in BFF logs | The alias is gone. Coolify's only automatic alias is the bare service name `rails`; `chatwoot-rails` is claimed explicitly in the compose |
+| Attachment shows as sent in Chatwoot but the image is broken | The object is not in R2. Check `ActiveStorage::Blob.service.exist?(blob.key)`, **not** the log — Rails prints "Uploaded file to key" for uploads that raised. Almost always the double-checksum trap above |
+| `422` on `POST …/messages` with an attachment | Read the response body, it carries the real reason. `You can only specify one non-default checksum at a time` = `AWS_REQUEST_CHECKSUM_CALCULATION` is missing |
+| Tempted to configure CORS on the R2 bucket | Don't. Uploads are server-side multipart; CORS applies to nothing here |
 | `sh: nest: not found` | A build-time `NODE_ENV=production`; see the Dockerfile note above |
 | Agent reply marked "Failed to send", but the app received it anyway | The reconciliation poll covered for a broken webhook — exactly what it is for. Check the inbox `webhook_url` and the Agent Bot `outgoing_url`; both must be the public URL |
 | `Could not resolve hostname 'bff'` on a message | The webhook is pointed at a Docker-network name. Coolify cannot give this application one — use `https://bff.aura-app.cc/webhooks/chatwoot` |
@@ -366,11 +396,27 @@ all; the services unescape them.
 
 ## Not yet proven
 
-- **The chat loop has never run end to end**: app → BFF → Chatwoot → chatter's
-  reply → app. With it goes the first real exercise of the inbox webhook. Until
-  2026-08-20 it could not have: `CHATWOOT_BASE_URL` named a host that did not
-  resolve, so every BFF→Chatwoot call failed. The name now resolves and answers
-  200 from inside the BFF, which makes the loop *possible* — not proven.
+- ~~The chat loop has never run end to end~~ — **proven 2026-08-20**: app → BFF
+  → Chatwoot → chatter's reply → app, with the inbox webhook returning `204` on a
+  verified signature. It took three fixes to get there, each disguised as
+  something else, all recorded above: the Firebase key mangled by Coolify's
+  escaping, a webhook aimed at a hostname Coolify cannot provide, and an agent
+  bot attached for retries that was quietly hiding conversations.
+
+  Two things this proved that were only assertions before. The **reconciliation
+  poll earns its place**: it carried a complete webhook outage, delivering the
+  chatter's reply to the phone while every webhook delivery was failing — and in
+  doing so hid the outage, which is worth remembering when a symptom looks like
+  "it works, mostly". And an agent's messages are **not** role-filtered anywhere;
+  a role that looks like it is losing messages is losing *attachment-only*
+  messages, which the BFF drops by design (`AURAF-0011`).
+- **Attachments reach Chatwoot but stop there.** Storing them in R2 works as of
+  2026-08-20, verified by downloading the object back byte-for-byte. The BFF
+  carries none of it: `message-normalizer.ts` drops any message without text, and
+  the word `attachment` appears once in the whole source — in the comment saying
+  so. `AURAF-0011` / `AURAT-0031` / `AURAT-0032` cover it, blocked on how the app
+  is to receive the bytes (Chatwoot's own attachment URL is **public and
+  unauthenticated** — verified — so it must never be handed to a device).
 - **No real purchase has been verified.** `TECH-DEBT #17` is only partly paid —
   the verifier has spoken to Google and been correctly refused, but no genuine
   token has been redeemed. On the first one, check that
