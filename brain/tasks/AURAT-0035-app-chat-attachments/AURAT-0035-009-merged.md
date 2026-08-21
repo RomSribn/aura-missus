@@ -42,7 +42,7 @@ Android (Samsung) и iPhone 14 Pro Max, боевой BFF, настоящий Cha
 | | |
 |---|---|
 | `AURAF-0011-008` | запись голосового — снята, `TECH-DEBT` 5 |
-| `AURAT-0037` | половина BFF не замержена; «Not delivered» гаснет только по нажатию |
+| `AURAT-0037` | замержено обеими половинами 2026-08-21; в поле не переподтверждено |
 | `AURAT-0038` | вставка из буфера — заведена, не начата |
 | `TECH-DEBT` 6 | пуши на iOS: нет APNs-ключа и capability |
 | iOS bundle id | остался шаблонным `org.reactjs.native.example.PsychoApp` |
