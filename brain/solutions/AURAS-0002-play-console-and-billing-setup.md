@@ -34,6 +34,11 @@ reserved until the first upload — nothing before this point claims the name.
 Listing title: **Aura — Psychic Reading** (22 of the 30 allowed characters).
 The launcher label in the build is the short "Aura" on purpose.
 
+The listing also needs a **privacy policy URL** and a **Data Safety** form, and
+neither could be filled until `AURAT-0040` put the pages up. Both are now
+answerable — see *Store listing: the privacy policy URL and Data Safety* below,
+and read it before filling the form rather than after.
+
 ### 3. Upload the first AAB
 
 ```bash
@@ -215,6 +220,60 @@ for anything a lost notification missed.
 
 Only after the closed-testing requirement from step 1 is satisfied, apply for
 production access and answer the feedback questionnaire.
+
+## Store listing: the privacy policy URL and Data Safety
+
+Added 2026-08-28 (`AURAT-0040`). This was missing from this runbook entirely —
+nine steps and three updates without the words "privacy policy" — which is how a
+release blocker stays invisible.
+
+**Play will not publish a listing without a privacy policy URL**, and the page
+must be reachable with no login and no token. Since `AURAT-0040` it is:
+
+```
+https://aura-app.cc/privacy/      ← canonical, with the trailing slash
+https://aura-app.cc/privacy       ← 301 to the above
+```
+
+Served by Netlify, off the production host deliberately, so a failed deploy of
+the service cannot take it down (`AURAS-0004`, *The legal pages are not on this
+host*).
+
+### Four things to know before filling the form
+
+1. **Data Safety must match what is actually collected — in both directions.**
+   Declaring data you do not collect is a mismatch just as much as omitting data
+   you do. The verified inventory, read out of `prisma/schema.prisma` and the
+   app rather than from any document, is `AURAT-0040-006`.
+
+2. **The published policy currently over-declares, and the form must not copy
+   it.** `AURAT-0040-007` found eleven discrepancies; the ones that touch this
+   form are a display name (there is none — the app shows a hardcoded default),
+   birth date/time/place (no such column exists), device model, OS version, app
+   version, language, IP address and crash reports (none collected; only
+   `device_tokens.platform`), and Apple/App Store (no iOS exists). What **is**
+   collected: phone number, Firebase UID, FCM token and platform, message text,
+   attachment metadata, wallet/ledger and Play purchase facts.
+
+3. **Play verifies the account-deletion claim.** The policy states an account
+   can be deleted from the app's profile screen. **It cannot** — the only
+   `@Delete` in the service unregisters a push token (`TECH-DEBT #24`). Data
+   Safety has its own data-deletion field, and answering it truthfully
+   contradicts the published policy. Fix one before submitting; do not answer
+   the form to match a promise the product does not keep.
+
+4. **The page is a JavaScript bundle, and a crawler sees it empty.** Its
+   `<noscript>` reads "This page requires JavaScript to display". A human and a
+   phone render it fine. If Play ever objects to the privacy-policy URL, this is
+   the likely cause and it is very hard to find any other way.
+
+### And the contact address on it does not work
+
+The policy names `info@aura-app.cc` and undertakes to answer a GDPR request
+there "within one month"; the terms and the site root name
+`support@aura-app.cc`. The domain has **no MX record at all** — checked against
+the zone's authoritative nameservers — so neither receives anything. Mail has to
+exist before that promise is published under a reviewer's nose.
 
 ## Current Behavior
 

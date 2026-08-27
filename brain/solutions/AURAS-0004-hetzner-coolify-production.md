@@ -34,6 +34,10 @@ also keeps `AURAD-0005`'s EU requirement intact, so no amendment was needed.
 | `aura-postgres` | `pgvector/pgvector:pg16` | internal only |
 | `aura-redis` | `redis:7.2` | internal only |
 
+These are the Coolify resources, and they are **not** everything answering on
+`aura-app.cc`: the legal pages live on Netlify, off this host entirely — see
+*The legal pages are not on this host* below.
+
 Both applications deploy from **`RomSribn/aura-bff`** — the BFF from the root
 `Dockerfile`, Chatwoot from `deploy/coolify/chatwoot.compose.yml`. One
 repository, one production configuration, no copy pasted into a panel to drift.
@@ -219,6 +223,87 @@ parsing, because Zod's `.optional()` means "may be undefined" and `''` is a
 present value that fails `.min(1)`.
 
 ---
+
+## The legal pages are not on this host
+
+`https://aura-app.cc/terms/` and `/privacy/` — plus the site root — are served by
+**Netlify**, not by anything described above. This is the project's **fourth
+platform** after Hetzner (the host), Cloudflare (the zone) and R2 (objects and
+dumps), and until this entry it was written down nowhere.
+
+Measured 2026-08-27/28, not inferred from a panel:
+
+| | |
+|---|---|
+| `aura-app.cc` (apex) | `A → 75.2.60.5` (Netlify), **DNS-only** in Cloudflare |
+| `www.aura-app.cc` | `CNAME → aura-app-landing.netlify.app` |
+| Response | `server: Netlify`, no `Set-Cookie` |
+| `/terms`, `/privacy` | `301` → the trailing-slash form; both `200` |
+| `/faq/` | **`404`** — the page does not exist; the app's row was hidden instead (`AURAT-0040-004`) |
+| `bff.` `chat.` `coolify.` | unchanged: `37.27.199.90`, DNS-only. Verified **after** the apex record appeared |
+
+Nothing here touches the Coolify stack. The apex was empty before this — no A,
+no CNAME, no MX, no TXT — so adding it broke nothing, and that was checked
+rather than assumed.
+
+### How it is operated, and why that is the real entry
+
+- **Account: the owner's personal Netlify account.**
+- **Deploy: drag-and-drop.** No git remote, no build, no webhook, no CI.
+- **There is no source. Anywhere.** The pages exist only as the artifact that
+  was dropped in.
+
+Three consequences, and they are the reason this section exists:
+
+1. **Nobody but the owner can publish a change**, including a correction that a
+   Play review demands.
+2. **There is no history.** Nothing can answer "what did the policy say last
+   month" or even "did it change" — and a privacy policy is a document whose
+   version and effective date are the point.
+3. **Editing means rebuilding, not editing.** The deployed page is a
+   self-contained bundle — a `__bundler` runtime, React and twelve WOFF2 fonts
+   inlined as base64 in a single ~547 KB HTML file. Changing a sentence means
+   going back to whatever produced it and dropping a new artifact.
+
+And the policy **will** need changing: `AURAT-0040-007` found eleven places
+where it disagrees with the code, one of which (it promises an account-deletion
+screen that does not exist) is a Play listing blocker.
+
+### The text is recoverable, so it is not actually lost
+
+Worth knowing before anyone panics about (2): the **prose is in the HTML** as
+ordinary escaped string literals. Only the fonts and React are inside the
+compressed blobs. So the published text can always be pulled back:
+
+```bash
+curl -s https://aura-app.cc/privacy/ \
+  | sed 's/[A-Za-z0-9+/=]\{200,\}//g' \
+  | node -e 'let h="";process.stdin.on("data",d=>h+=d).on("end",()=>{
+      h=h.replace(/\\u002F/gi,"/").replace(/\\n/g,"\n");
+      h=h.replace(/<style[\s\S]*?<\/style>/gi," ").replace(/<[^>]+>/g," ");
+      console.log(h.replace(/[ \t]+/g," "));})'
+```
+
+A copy taken 2026-08-27 — both pages, full text — is kept in
+`AURAT-0040-009-published-text-recovered.md`, so there is at least one version
+under version control to diff the next one against.
+
+### The domain has no mail, and both pages publish an address
+
+`MX` is empty, `TXT`/SPF are empty, and `mail`/`smtp`/`mx` do not resolve —
+checked against the zone's authoritative nameservers. Meanwhile the live pages
+print **two** addresses: `info@aura-app.cc` (privacy, and the address its §08
+undertakes to answer a GDPR request on "within one month") and
+`support@aura-app.cc` (terms and the root). Neither can receive anything.
+
+### If this is ever moved
+
+Put the source in `RomSribn/aura-bff` and deploy it the way everything else
+here is deployed, or keep Netlify but connect it to a repository. Either ends
+all three consequences above. What must **not** happen is a second hand-managed
+copy: `deploy/Caddyfile` and `deploy/terraform/` are already a directory that
+describes a stand which does not run (`AURAS-0003`), and that trap does not need
+a sequel.
 
 ## Chatwoot specifics
 
