@@ -246,14 +246,28 @@ host*).
    you do. The verified inventory, read out of `prisma/schema.prisma` and the
    app rather than from any document, is `AURAT-0040-006`.
 
-2. **The published policy currently over-declares, and the form must not copy
-   it.** `AURAT-0040-007` found eleven discrepancies; the ones that touch this
-   form are a display name (there is none — the app shows a hardcoded default),
-   birth date/time/place (no such column exists), device model, OS version, app
-   version, language, IP address and crash reports (none collected; only
-   `device_tokens.platform`), and Apple/App Store (no iOS exists). What **is**
-   collected: phone number, Firebase UID, FCM token and platform, message text,
-   attachment metadata, wallet/ledger and Play purchase facts.
+2. **The published policy over-declares in places, and the form must not copy
+   it.** `AURAT-0040-007` found ten discrepancies; the ones that touch this form
+   are birth date/time/place (no such column exists, and `AURAT-0039` has not
+   started), device model, OS version, app version, language, IP address and
+   crash reports (none of it collected — the app sends `{ platform }` and
+   nothing else, and carries no Crashlytics, Sentry or analytics dependency),
+   and Apple/App Store (no iOS exists).
+
+   What **is** collected: phone number, Firebase UID, **the display name the
+   user chooses**, FCM token and platform, message text, attachment metadata,
+   wallet/ledger and Play purchase facts.
+
+   **The display name is easy to miss and must not be omitted here.** It is
+   absent from `prisma/schema.prisma`, because it is never sent to this service
+   at all: the profile sheet writes it straight to Firebase Auth
+   (`use-profile.ts` → `updateProfile({ displayName })`), so it lives at Google.
+   In Data Safety it is its own line — **Personal info → Name** — and it is data
+   held by a third party. `AURAT-0040-007` originally called it over-declared;
+   `AURAT-0040-012` corrects that. The general lesson, which applies to every
+   future pass over this form: **a collection claim is settled by the write
+   path, not by our schema** — the app can hand data to a third party on a route
+   our database never sees.
 
 3. **Play verifies the account-deletion claim.** The policy states an account
    can be deleted from the app's profile screen. **It cannot** — the only
