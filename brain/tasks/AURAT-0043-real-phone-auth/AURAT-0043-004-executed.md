@@ -135,3 +135,83 @@ Android) — ядро RN и оба под `try`, с падением на `ES`.
 
 Пункты 2–6 из `-001` проверяемы как есть. Пункт 1 — реальный номер — ждёт
 платёжного аккаунта.
+
+---
+
+## Дополнение 2026-08-28 — сборки в маноре после мержа
+
+Мерж в `develop` локальный (`1ef4e32`), origin не тронут по решению владельца.
+В маноре доставлен `libphonenumber-js`, перепроверено: tsc чисто, eslint чисто,
+466 тестов зелёные.
+
+### Android — собрано, поставлено, работает
+
+`assembleDebug` → `BUILD SUCCESSFUL`. APK (`cc.silvermind.aura`, versionCode 12)
+установлен на устройство `R58M37RG00M`, запущен, бандл загрузился, **в logcat ни
+одной ошибки RN**. В сборке зашит `AURA_AUTH_TEST_MODE=false`, то есть это
+именно тот режим, ради которого задача и делалась.
+
+### iOS — то, ради чего всё и затевалось
+
+Первая сборка под устройство **упала ровно там, где и предсказывалось**:
+
+```
+error: Provisioning profile "iOS Team Provisioning Profile: *"
+       doesn't include the Push Notifications capability.
+error: ... doesn't include the aps-environment entitlement.
+```
+
+Профиль был **wildcard**, а wildcard App ID пуши нести не может в принципе. То
+есть отказ сборки — это не поломка от правки, а её работа: до `AURAT-0043`
+таргет не объявлял entitlements вовсе, wildcard-профиля хватало, и iOS молча
+оставался без пушей и без проверки приложения. Теперь Xcode отказывается
+собирать бинарь, который всё равно не смог бы подтвердиться.
+
+С `-allowProvisioningUpdates` (одобрено владельцем) Xcode завёл явный App ID.
+**Проверено на диске, а не по логу:**
+
+```
+profile: iOS Team Provisioning Profile: cc.silvermind.aura
+app-id: 7CP3SB86G2.cc.silvermind.aura
+aps-environment: development
+```
+
+Итог сборки — `** BUILD SUCCEEDED **`, `XCODEBUILD_EXIT=0`, ошибок ноль.
+Проверено в готовом `.app`:
+
+| Что | Значение |
+|---|---|
+| `codesign` Identifier / Team | `cc.silvermind.aura` / `7CP3SB86G2` |
+| entitlements, вшитые в бинарь | `7CP3SB86G2.cc.silvermind.aura`, `aps-environment: development` |
+| `CFBundleIdentifier` | `cc.silvermind.aura` |
+| `CFBundleDisplayName` | `Aura` |
+| `BUNDLE_ID` в Firebase-плисте внутри `.app` | `cc.silvermind.aura` — совпадает |
+| схема возврата против `GOOGLE_APP_ID` | `app-1-1022442840784-ios-16fa182197eb4117d734d5` — **совпадает** |
+
+Последняя строка важнее прочих: именно рассогласование схемы и `GOOGLE_APP_ID`
+было ловушкой, названной в `-002`, и она проверена машиной, а не глазами.
+
+### Ловушка на будущее: два Metro за один кэш
+
+Между двумя iOS-сборками была ещё одна неудача, и она **не относится ни к коду,
+ни к подписи**. Скрипт `Bundle React Native code and images` запускается с
+`--reset-cache` и сносит общий `$TMPDIR/metro-cache`. Если в этот момент
+работает Metro (например, поднятый для Android-устройства), он пишет туда же:
+
+```
+Error: ENOTEMPTY: directory not empty, rmdir '.../T/metro-cache/fa'
+    at FileStore.clear (metro-cache/src/stores/FileStore.js:58)
+```
+
+Лечится тем, что iOS-сборке даётся свой `TMPDIR`. Стоит помнить: симптом
+выглядит как поломка сборки, а причина — соседний процесс.
+
+## Что теперь осталось владельцу
+
+Список из `-001` сократился на два пункта — App ID с Push заведён, Play
+Integrity включён. Осталось:
+
+1. **Платёжный аккаунт** — без него реальной SMS не будет (`TECH-DEBT` #7).
+2. **Ключ APNs** в `aura-2781b` для `cc.silvermind.aura`. Это **последнее**, что
+   отделяет iOS от рабочего телефонного входа и рабочих пушей.
+3. **Связка в Play Console** с Play Integrity.
