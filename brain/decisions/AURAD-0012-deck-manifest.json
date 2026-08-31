@@ -1,546 +1,546 @@
 [
  {
   "card": "cups-02",
-  "key": "tarot/lightseers/cups-02.png",
+  "key": "tarot/cups-02.png",
   "sha256": "6b8deb82ba6b7313411a638df16b40abf68fc1dd1a2daee76a55e15d8edf8706",
   "bytes": 170667,
   "sourceFile": "lightseers-2-of-cups-tarot.png"
  },
  {
   "card": "cups-03",
-  "key": "tarot/lightseers/cups-03.png",
+  "key": "tarot/cups-03.png",
   "sha256": "d473cef13afa4b5bf23fa22e57f058d9b56cdd2c22753118697d9f7a7753c225",
   "bytes": 140836,
   "sourceFile": "lightseers-3-of-cups-tarot.png"
  },
  {
   "card": "cups-04",
-  "key": "tarot/lightseers/cups-04.png",
+  "key": "tarot/cups-04.png",
   "sha256": "207b410a37f884ae8d1e64aa39ee4f84ad63e54e36e648671e402859557a9ce4",
   "bytes": 197817,
   "sourceFile": "lightseers-4-of-cups-tarot.png"
  },
  {
   "card": "cups-05",
-  "key": "tarot/lightseers/cups-05.png",
+  "key": "tarot/cups-05.png",
   "sha256": "d9073a78a0ac4dc53436b06d2845392cfb429c14e9d25d272c19ff52446d6f0f",
   "bytes": 177433,
   "sourceFile": "lightseers-5-of-cups-tarot.png"
  },
  {
   "card": "cups-06",
-  "key": "tarot/lightseers/cups-06.png",
+  "key": "tarot/cups-06.png",
   "sha256": "e9059e0c44294bf293105ddb650f8381d1cc941e6a4c73cf2df635e19d19a722",
   "bytes": 192748,
   "sourceFile": "lightseers-6-of-cups-tarot.png"
  },
  {
   "card": "cups-07",
-  "key": "tarot/lightseers/cups-07.png",
+  "key": "tarot/cups-07.png",
   "sha256": "c76b1543aabe1ba613f2fc449a133aba10c4cc0f03e374e2bdedca719e9b767f",
   "bytes": 151082,
   "sourceFile": "lightseers-7-of-cups-tarot.png"
  },
  {
   "card": "cups-08",
-  "key": "tarot/lightseers/cups-08.png",
+  "key": "tarot/cups-08.png",
   "sha256": "fca56f0cf4af9b94fa0b52227caec9646a4734805b839063d2bd93c6c49d0683",
   "bytes": 144472,
   "sourceFile": "lightseers-8-of-cups-tarot.png"
  },
  {
   "card": "cups-09",
-  "key": "tarot/lightseers/cups-09.png",
+  "key": "tarot/cups-09.png",
   "sha256": "c869d51ce2851bcd22a94a0c936c86861cea392aca495c2ce142e6b894558282",
   "bytes": 175913,
   "sourceFile": "lightseers-9-of-cups-tarot.png"
  },
  {
   "card": "cups-10",
-  "key": "tarot/lightseers/cups-10.png",
+  "key": "tarot/cups-10.png",
   "sha256": "6745d33a342aa38eea3215968bfcca7b229721d13268d1ecd3351aa4cb26f4ec",
   "bytes": 175162,
   "sourceFile": "lightseers-10-of-cups-tarot.png"
  },
  {
   "card": "cups-ace",
-  "key": "tarot/lightseers/cups-ace.png",
+  "key": "tarot/cups-ace.png",
   "sha256": "3fbdce6a42727a05630cc8cc45eb534518116cf977000599fb0b2d9b11484d44",
   "bytes": 219917,
   "sourceFile": "lightseers-1-ace-of-cups-tarot.png"
  },
  {
   "card": "cups-king",
-  "key": "tarot/lightseers/cups-king.png",
+  "key": "tarot/cups-king.png",
   "sha256": "32ae7f7dd3f9b13cbfef8bfb3e0d29f8fc9d5d49e986613cbccd2156cc101b38",
   "bytes": 181022,
   "sourceFile": "lightseers-14-king-of-cups-tarot.png"
  },
  {
   "card": "cups-knight",
-  "key": "tarot/lightseers/cups-knight.png",
+  "key": "tarot/cups-knight.png",
   "sha256": "5725fefba869303473de05b09f64cbb85a1923d13f06bdd9863f40d07694c1ab",
   "bytes": 159421,
   "sourceFile": "lightseers-12-knight-of-cups-tarot.png"
  },
  {
   "card": "cups-page",
-  "key": "tarot/lightseers/cups-page.png",
+  "key": "tarot/cups-page.png",
   "sha256": "4b19b37c19e72b2b00334f167a573336240295d0001d49d92e487d38d9d827d6",
   "bytes": 157482,
   "sourceFile": "lightseers-11-page-of-cups-tarot.png"
  },
  {
   "card": "cups-queen",
-  "key": "tarot/lightseers/cups-queen.png",
+  "key": "tarot/cups-queen.png",
   "sha256": "a947a9dfd1a5f53fc8cb34649f15f09639002e304f65d2552fb6dfac10f2b2da",
   "bytes": 185706,
   "sourceFile": "lightseers-13-queen-of-cups-tarot.png"
  },
  {
   "card": "major-00-fool",
-  "key": "tarot/lightseers/major-00-fool.png",
+  "key": "tarot/major-00-fool.png",
   "sha256": "19122a028ca2297bf2d96d62ef2e31523d8d1e0fd15538379059851fe8fa8cf6",
   "bytes": 169556,
   "sourceFile": "lightseers-00-fool-tarot-meaning.png"
  },
  {
   "card": "major-01-magician",
-  "key": "tarot/lightseers/major-01-magician.png",
+  "key": "tarot/major-01-magician.png",
   "sha256": "af69ff271c899d6d647160fa0804eec3622469c6a94ab2ee5000804ebb08ae84",
   "bytes": 156622,
   "sourceFile": "lightseers-01-magician-tarot-meaning.png"
  },
  {
   "card": "major-02-high-priestess",
-  "key": "tarot/lightseers/major-02-high-priestess.png",
+  "key": "tarot/major-02-high-priestess.png",
   "sha256": "1f5ad26d8f471c2a51eba243fd5e694d82d0a714cb21f1bc4984201875f8b82e",
   "bytes": 173454,
   "sourceFile": "lightseers-02-high-priestess-tarot-meaning.png"
  },
  {
   "card": "major-03-empress",
-  "key": "tarot/lightseers/major-03-empress.png",
+  "key": "tarot/major-03-empress.png",
   "sha256": "266384aaa700c5c36d4bf284d8ad1821bf14388b7a52180a1c8063de285f2a66",
   "bytes": 191920,
   "sourceFile": "lightseers-03-empress-tarot-meaning.png"
  },
  {
   "card": "major-04-emperor",
-  "key": "tarot/lightseers/major-04-emperor.png",
+  "key": "tarot/major-04-emperor.png",
   "sha256": "d8a472994e66342bf2cb5995555c003c6203d305b1cc2b151063895d51af0eee",
   "bytes": 208562,
   "sourceFile": "lightseers-04-emperor-tarot-meaning.png"
  },
  {
   "card": "major-05-hierophant",
-  "key": "tarot/lightseers/major-05-hierophant.png",
+  "key": "tarot/major-05-hierophant.png",
   "sha256": "2522558e665748e430a619dc3f639ce70feb8789ad9d00cb7b4a8b19f852c9dc",
   "bytes": 171968,
   "sourceFile": "lightseers-05-hierophant-tarot-meaning.png"
  },
  {
   "card": "major-06-lovers",
-  "key": "tarot/lightseers/major-06-lovers.png",
+  "key": "tarot/major-06-lovers.png",
   "sha256": "4811de04be809eed04e24ea2ede9cca515323dd7b1ba9f6181842f3cd19dfa89",
   "bytes": 187632,
   "sourceFile": "lightseers-06-lovers-tarot-meaning.png"
  },
  {
   "card": "major-07-chariot",
-  "key": "tarot/lightseers/major-07-chariot.png",
+  "key": "tarot/major-07-chariot.png",
   "sha256": "750c04a64afbf935f95e9f63a462d34268b7597b11dd214fdd1c9899df6653c0",
   "bytes": 164684,
   "sourceFile": "lightseers-07-chariot-tarot-meaning.png"
  },
  {
   "card": "major-08-strength",
-  "key": "tarot/lightseers/major-08-strength.png",
+  "key": "tarot/major-08-strength.png",
   "sha256": "33b74136598912c14a049e71bbdd20e929650a0bd9452147c4d5a046d0fa9fc5",
   "bytes": 188390,
   "sourceFile": "lightseers-08-strength-tarot-meaning.png"
  },
  {
   "card": "major-09-hermit",
-  "key": "tarot/lightseers/major-09-hermit.png",
+  "key": "tarot/major-09-hermit.png",
   "sha256": "6b2de4bc9f85393c9645256118d2d466f96099c6d198ef5fba1b5a8b01a65fe6",
   "bytes": 196099,
   "sourceFile": "lightseers-09-hermit-tarot-meaning.png"
  },
  {
   "card": "major-10-wheel",
-  "key": "tarot/lightseers/major-10-wheel.png",
+  "key": "tarot/major-10-wheel.png",
   "sha256": "8de53ca76fdf93532b06077a5c28c51e2f303ca27104af9928b80b542bd632b6",
   "bytes": 183352,
   "sourceFile": "lightseers-10-wheel-tarot-meaning.png"
  },
  {
   "card": "major-11-justice",
-  "key": "tarot/lightseers/major-11-justice.png",
+  "key": "tarot/major-11-justice.png",
   "sha256": "bf78b71054b656adc0a381245a967a4fa636f6e9ed85543725af08dc88424bc5",
   "bytes": 186864,
   "sourceFile": "lightseers-11-justice-tarot-meaning.png"
  },
  {
   "card": "major-12-hanged-man",
-  "key": "tarot/lightseers/major-12-hanged-man.png",
+  "key": "tarot/major-12-hanged-man.png",
   "sha256": "dd32fc3d3f56829a8da66e5cb0518bd6f23933858067ef62e3355705ab262f97",
   "bytes": 206740,
   "sourceFile": "lightseers-12-hanged-man-tarot-meaning.png"
  },
  {
   "card": "major-13-death",
-  "key": "tarot/lightseers/major-13-death.png",
+  "key": "tarot/major-13-death.png",
   "sha256": "ff725c9e10535c8818ca9df0e8b855ab103bf2a3e2e1bf7da4f0fe6f45ee52a6",
   "bytes": 311314,
   "sourceFile": "lightseers-13-death-tarot-meaning.png"
  },
  {
   "card": "major-14-temperance",
-  "key": "tarot/lightseers/major-14-temperance.png",
+  "key": "tarot/major-14-temperance.png",
   "sha256": "eaef1bbf398dfa289fdfec4db22788df70bba4b3eb275a98824fe4c8d0286592",
   "bytes": 187555,
   "sourceFile": "lightseers-14-temperance-tarot-meaning.png"
  },
  {
   "card": "major-15-devil",
-  "key": "tarot/lightseers/major-15-devil.png",
+  "key": "tarot/major-15-devil.png",
   "sha256": "a50c97c6c4844b1d3bcf1bf0b8f793a014a30cf21f354512d592adfaa5b4532c",
   "bytes": 207931,
   "sourceFile": "lightseers-15-devil-tarot-meaning.png"
  },
  {
   "card": "major-16-tower",
-  "key": "tarot/lightseers/major-16-tower.png",
+  "key": "tarot/major-16-tower.png",
   "sha256": "95446be651cb518d6a3ced9cecedeacf9c5affe4b7758a395f47e961ac7a70e4",
   "bytes": 217835,
   "sourceFile": "lightseers-16-tower-tarot-meaning.png"
  },
  {
   "card": "major-17-star",
-  "key": "tarot/lightseers/major-17-star.png",
+  "key": "tarot/major-17-star.png",
   "sha256": "5733f9e3551e332461f8ddebd163a46f672478cca867576f1f2e5f848e41a2cb",
   "bytes": 174936,
   "sourceFile": "lightseers-17-star-tarot-meaning.png"
  },
  {
   "card": "major-18-moon",
-  "key": "tarot/lightseers/major-18-moon.png",
+  "key": "tarot/major-18-moon.png",
   "sha256": "b6bc3e32369bb3657265637dd9469ed7afe34512f95efb5049fe7139b2fdfdfd",
   "bytes": 164849,
   "sourceFile": "lightseers-18-moon-tarot-meaning.png"
  },
  {
   "card": "major-19-sun",
-  "key": "tarot/lightseers/major-19-sun.png",
+  "key": "tarot/major-19-sun.png",
   "sha256": "395fb598ec4e7f646d4bb1ff1fd16b97a781495aed510af376eece3dbf14a762",
   "bytes": 156338,
   "sourceFile": "lightseers-19-sun-tarot-meaning.png"
  },
  {
   "card": "major-20-judgement",
-  "key": "tarot/lightseers/major-20-judgement.png",
+  "key": "tarot/major-20-judgement.png",
   "sha256": "ab243960a3fdbd3723836dd8bf2f499abd65c6e1b607b5524c16f568b1b38624",
   "bytes": 189504,
   "sourceFile": "lightseers-20-judgement-tarot-meaning.png"
  },
  {
   "card": "major-21-world",
-  "key": "tarot/lightseers/major-21-world.png",
+  "key": "tarot/major-21-world.png",
   "sha256": "fcfc9f9aa4747f6a87b645cc4840c91e0e3c3e1cc4ddd2e5a23e245f61059e50",
   "bytes": 175034,
   "sourceFile": "lightseers-21-world-tarot-meaning.png"
  },
  {
   "card": "pentacles-02",
-  "key": "tarot/lightseers/pentacles-02.png",
+  "key": "tarot/pentacles-02.png",
   "sha256": "dcb113b9654994ac2a84ce00e2e518300bdcf03ce4be7d364b82537dcc53d1c5",
   "bytes": 169744,
   "sourceFile": "lightseers-2-of-pentacles-tarot.png"
  },
  {
   "card": "pentacles-03",
-  "key": "tarot/lightseers/pentacles-03.png",
+  "key": "tarot/pentacles-03.png",
   "sha256": "1aa4d6aa4abab9968cdbce38222dab83c94742516577bcf70a55bd86545bd109",
   "bytes": 206723,
   "sourceFile": "lightseers-3-of-pentacles-tarot.png"
  },
  {
   "card": "pentacles-04",
-  "key": "tarot/lightseers/pentacles-04.png",
+  "key": "tarot/pentacles-04.png",
   "sha256": "2c95a2095236a7295f946e9decde18edd327a22e47efb6b60b2d1068535e5b91",
   "bytes": 153567,
   "sourceFile": "lightseers-4-of-pentacles-tarot.png"
  },
  {
   "card": "pentacles-05",
-  "key": "tarot/lightseers/pentacles-05.png",
+  "key": "tarot/pentacles-05.png",
   "sha256": "4afe8a330cf4ebef5d7161d42b6df5aca84130ea5ed551bf690529cca8e2c220",
   "bytes": 201812,
   "sourceFile": "lightseers-5-of-pentacles-tarot.png"
  },
  {
   "card": "pentacles-06",
-  "key": "tarot/lightseers/pentacles-06.png",
+  "key": "tarot/pentacles-06.png",
   "sha256": "6ae068d4862afeb8bc0d1b6591e8ab7cab56b8dbb4f9296d85b16dfea88529b8",
   "bytes": 169527,
   "sourceFile": "lightseers-6-of-pentacles-tarot.png"
  },
  {
   "card": "pentacles-07",
-  "key": "tarot/lightseers/pentacles-07.png",
+  "key": "tarot/pentacles-07.png",
   "sha256": "d99e70873e4957951acafa91dd021b30d223d9373a51a8e6b4ac5e1b16d9c47b",
   "bytes": 212073,
   "sourceFile": "lightseers-7-of-pentacles-tarot.png"
  },
  {
   "card": "pentacles-08",
-  "key": "tarot/lightseers/pentacles-08.png",
+  "key": "tarot/pentacles-08.png",
   "sha256": "e413d46a043240960daee436a2e7d5b519ea59914cdd0d2966e9b574a0d55823",
   "bytes": 174563,
   "sourceFile": "lightseers-8-of-pentacles-tarot.png"
  },
  {
   "card": "pentacles-09",
-  "key": "tarot/lightseers/pentacles-09.png",
+  "key": "tarot/pentacles-09.png",
   "sha256": "c59ff23322d2e603d10ab0d0da8c12f108ac434d7e5caf93b1edd01212e177cc",
   "bytes": 183831,
   "sourceFile": "lightseers-9-of-pentacles-tarot.png"
  },
  {
   "card": "pentacles-10",
-  "key": "tarot/lightseers/pentacles-10.png",
+  "key": "tarot/pentacles-10.png",
   "sha256": "6ce5e889e9eb00107875e554e22432ef4e1d1e0bf4ad5568e138056e60a224a1",
   "bytes": 205930,
   "sourceFile": "lightseers-10-of-pentacles-tarot.png"
  },
  {
   "card": "pentacles-ace",
-  "key": "tarot/lightseers/pentacles-ace.png",
+  "key": "tarot/pentacles-ace.png",
   "sha256": "8546aef70cd6eb1587b7837ef25798f324509c69fdd12419bb5bc1a23d315fd7",
   "bytes": 189808,
   "sourceFile": "lightseers-1-ace-of-pentacles-tarot.png"
  },
  {
   "card": "pentacles-king",
-  "key": "tarot/lightseers/pentacles-king.png",
+  "key": "tarot/pentacles-king.png",
   "sha256": "408608ede6afee20b07ae0ccf53ec5eea1d040f61c328385fabeb25236f3707b",
   "bytes": 206989,
   "sourceFile": "lightseers-14-king-of-pentacles-tarot.png"
  },
  {
   "card": "pentacles-knight",
-  "key": "tarot/lightseers/pentacles-knight.png",
+  "key": "tarot/pentacles-knight.png",
   "sha256": "9bd2af466ccfa453afff2f9aeec65385c62517e1fd4f269e1c74593739e6305f",
   "bytes": 180500,
   "sourceFile": "lightseers-12-knight-of-pentacles-tarot.png"
  },
  {
   "card": "pentacles-page",
-  "key": "tarot/lightseers/pentacles-page.png",
+  "key": "tarot/pentacles-page.png",
   "sha256": "31aef1333cd476d8d96ccc986ce775cdbee5f5efccc319f771b938bea97c827a",
   "bytes": 180087,
   "sourceFile": "lightseers-11-page-of-pentacles-tarot.png"
  },
  {
   "card": "pentacles-queen",
-  "key": "tarot/lightseers/pentacles-queen.png",
+  "key": "tarot/pentacles-queen.png",
   "sha256": "077f45570547403262f59164a7c838f3c21a1a1821acf03c5b2cdb98ef005510",
   "bytes": 207911,
   "sourceFile": "lightseers-13-queen-of-pentacles-tarot.png"
  },
  {
   "card": "swords-02",
-  "key": "tarot/lightseers/swords-02.png",
+  "key": "tarot/swords-02.png",
   "sha256": "acc98338993ff3cac5f458097a6d9da5b8a6572167f23f38e8478d2d14054f60",
   "bytes": 178135,
   "sourceFile": "lightseers-2-of-swords-tarot.png"
  },
  {
   "card": "swords-03",
-  "key": "tarot/lightseers/swords-03.png",
+  "key": "tarot/swords-03.png",
   "sha256": "37c5457e1aa979f27b81f1d21be44812d8b8a597b3d8d456ba34a9f769999ba7",
   "bytes": 209758,
   "sourceFile": "lightseers-3-of-swords-tarot.png"
  },
  {
   "card": "swords-04",
-  "key": "tarot/lightseers/swords-04.png",
+  "key": "tarot/swords-04.png",
   "sha256": "0cff5847ba284df99fe6cd46e21d05240fde91ac8ef85113e86025d73724b632",
   "bytes": 226272,
   "sourceFile": "lightseers-4-of-swords-tarot.png"
  },
  {
   "card": "swords-05",
-  "key": "tarot/lightseers/swords-05.png",
+  "key": "tarot/swords-05.png",
   "sha256": "aec767d46a369d332214648946986780e0f517365176d93dcb5e3beb5ecb6ec0",
   "bytes": 173232,
   "sourceFile": "lightseers-5-of-swords-tarot.png"
  },
  {
   "card": "swords-06",
-  "key": "tarot/lightseers/swords-06.png",
+  "key": "tarot/swords-06.png",
   "sha256": "5b10c23a2eb7cdc0a61c459a2317a2058102beac2dd9b00ad22fd1d0abc9a0d7",
   "bytes": 168747,
   "sourceFile": "lightseers-6-of-swords-tarot.png"
  },
  {
   "card": "swords-07",
-  "key": "tarot/lightseers/swords-07.png",
+  "key": "tarot/swords-07.png",
   "sha256": "9b4944399565f8dae3718b94f18b295bb1087bf293fc00b762db62eefa0fb386",
   "bytes": 175740,
   "sourceFile": "lightseers-7-of-swords-tarot.png"
  },
  {
   "card": "swords-08",
-  "key": "tarot/lightseers/swords-08.png",
+  "key": "tarot/swords-08.png",
   "sha256": "eda12728f3f1c65ac13fea4835dcf58937245566adb362f174f8e2afb9fd6c9c",
   "bytes": 205582,
   "sourceFile": "lightseers-8-of-swords-tarot.png"
  },
  {
   "card": "swords-09",
-  "key": "tarot/lightseers/swords-09.png",
+  "key": "tarot/swords-09.png",
   "sha256": "da72bcd873cbf794e66c45696cb88ef76d3767454fcaf2b31831c05e91a8e68e",
   "bytes": 169713,
   "sourceFile": "lightseers-9-of-swords-tarot.png"
  },
  {
   "card": "swords-10",
-  "key": "tarot/lightseers/swords-10.png",
+  "key": "tarot/swords-10.png",
   "sha256": "b2151e7c199254fb6492bfbba76120976981d0d1b126c2e2ad6f249add42bdf1",
   "bytes": 128490,
   "sourceFile": "lightseers-10-of-swords-tarot.png"
  },
  {
   "card": "swords-ace",
-  "key": "tarot/lightseers/swords-ace.png",
+  "key": "tarot/swords-ace.png",
   "sha256": "4984cb59c1a24644f1f8d604ed359d266ab6a9ab2a57adff4a9c787cf0f9c9a2",
   "bytes": 162037,
   "sourceFile": "lightseers-1-ace-of-swords-tarot.png"
  },
  {
   "card": "swords-king",
-  "key": "tarot/lightseers/swords-king.png",
+  "key": "tarot/swords-king.png",
   "sha256": "aff84587653a74c0511c43bd3370696142cbd22bc8a45784beb6055bc2677029",
   "bytes": 179989,
   "sourceFile": "lightseers-14-king-of-swords-tarot.png"
  },
  {
   "card": "swords-knight",
-  "key": "tarot/lightseers/swords-knight.png",
+  "key": "tarot/swords-knight.png",
   "sha256": "90f8c78925df93f25aa8e9b0de8c1fa8aadba05ce4aa38c0264aaf2fae0c40fe",
   "bytes": 163277,
   "sourceFile": "lightseers-12-knight-of-swords-tarot.png"
  },
  {
   "card": "swords-page",
-  "key": "tarot/lightseers/swords-page.png",
+  "key": "tarot/swords-page.png",
   "sha256": "ebe6b09620e7befd93a1baf009c09792203405d13e35ccd1790d3da9312ddf82",
   "bytes": 161117,
   "sourceFile": "lightseers-11-page-of-swords-tarot.png"
  },
  {
   "card": "swords-queen",
-  "key": "tarot/lightseers/swords-queen.png",
+  "key": "tarot/swords-queen.png",
   "sha256": "f2ff672e428ac24bd01d13e032dc7e0db9865237632f73764a257d5731c7af10",
   "bytes": 177716,
   "sourceFile": "lightseers-13-queen-of-swords-tarot.png"
  },
  {
   "card": "wands-02",
-  "key": "tarot/lightseers/wands-02.png",
+  "key": "tarot/wands-02.png",
   "sha256": "4bb78850ae110748d9bf52da499975a2c4b8e35823f38394b35a7ebabb3d8c7e",
   "bytes": 167024,
   "sourceFile": "lightseers-2-of-wands-tarot.png"
  },
  {
   "card": "wands-03",
-  "key": "tarot/lightseers/wands-03.png",
+  "key": "tarot/wands-03.png",
   "sha256": "702a747876960520b0e5c9b069670ce817e153d94272d18116a929a17e903f41",
   "bytes": 193937,
   "sourceFile": "lightseers-3-of-wands-tarot.png"
  },
  {
   "card": "wands-04",
-  "key": "tarot/lightseers/wands-04.png",
+  "key": "tarot/wands-04.png",
   "sha256": "8938f6dce85f38109deaebc23613069197855d8a4e5506607b529173c99ac8b7",
   "bytes": 182240,
   "sourceFile": "lightseers-4-of-wands-tarot.png"
  },
  {
   "card": "wands-05",
-  "key": "tarot/lightseers/wands-05.png",
+  "key": "tarot/wands-05.png",
   "sha256": "e1eb8bba2ec24b8e5c08ad1c070b669092bc8c7ecd0be2337f58e360ce8f78c7",
   "bytes": 201054,
   "sourceFile": "lightseers-5-of-wands-tarot.png"
  },
  {
   "card": "wands-06",
-  "key": "tarot/lightseers/wands-06.png",
+  "key": "tarot/wands-06.png",
   "sha256": "7787262f384b5585871d7c8e5cee7242d6fbaa2fdadb6f2c6f2710e40a995b9f",
   "bytes": 178193,
   "sourceFile": "lightseers-6-of-wands-tarot.png"
  },
  {
   "card": "wands-07",
-  "key": "tarot/lightseers/wands-07.png",
+  "key": "tarot/wands-07.png",
   "sha256": "6c4144edcbe4dd3f4bc3e6aaec03e1aebb2445b12ac15a8f0bd905df90142bfd",
   "bytes": 168779,
   "sourceFile": "lightseers-7-of-wands-tarot.png"
  },
  {
   "card": "wands-08",
-  "key": "tarot/lightseers/wands-08.png",
+  "key": "tarot/wands-08.png",
   "sha256": "533773ed6625b3a8605d817b003ef37be56c6747e20234b406ee5d8fc8da2be4",
   "bytes": 218561,
   "sourceFile": "lightseers-8-of-wands-tarot.png"
  },
  {
   "card": "wands-09",
-  "key": "tarot/lightseers/wands-09.png",
+  "key": "tarot/wands-09.png",
   "sha256": "eaff4f0715570fff98aab5db3a9e615e5af6277db7760dea1865bbe0c3e19e66",
   "bytes": 195495,
   "sourceFile": "lightseers-9-of-wands-tarot.png"
  },
  {
   "card": "wands-10",
-  "key": "tarot/lightseers/wands-10.png",
+  "key": "tarot/wands-10.png",
   "sha256": "fd8190b9cf68dcbcc88f92a05ad53c177693b5bb62e518f3af1cbba4af529dba",
   "bytes": 182302,
   "sourceFile": "lightseers-10-of-wands-tarot.png"
  },
  {
   "card": "wands-ace",
-  "key": "tarot/lightseers/wands-ace.png",
+  "key": "tarot/wands-ace.png",
   "sha256": "2bb5a62e93b3632178c0cb4922285df2e0189d2b0e864b6d116b41546df030b3",
   "bytes": 227299,
   "sourceFile": "lightseers-1-ace-of-wands-tarot.png"
  },
  {
   "card": "wands-king",
-  "key": "tarot/lightseers/wands-king.png",
+  "key": "tarot/wands-king.png",
   "sha256": "2f6f8f72cd0bb6d9565591cbb5eb2782d91750de65c86bf3ea695e133948c988",
   "bytes": 147142,
   "sourceFile": "lightseers-14-king-of-wands-tarot.png"
  },
  {
   "card": "wands-knight",
-  "key": "tarot/lightseers/wands-knight.png",
+  "key": "tarot/wands-knight.png",
   "sha256": "0ada5d09e9e84f2ddaa4e2e32dec917e8e24ac0ed7c6a10aa40679a8b49b66d2",
   "bytes": 182892,
   "sourceFile": "lightseers-12-knight-of-wands.png"
  },
  {
   "card": "wands-page",
-  "key": "tarot/lightseers/wands-page.png",
+  "key": "tarot/wands-page.png",
   "sha256": "cab87db9a9e8687002192a6135bdeb5d40f5dc389fc695b595233194485d9043",
   "bytes": 175218,
   "sourceFile": "lightseers-11-page-of-wands-tarot.png"
  },
  {
   "card": "wands-queen",
-  "key": "tarot/lightseers/wands-queen.png",
+  "key": "tarot/wands-queen.png",
   "sha256": "b979c76cd02983db71ed1e109dda4cbc80c3bcb368a3d4fc5a6c6724b0255ac7",
   "bytes": 191414,
   "sourceFile": "lightseers-13-queen-of-wands-tarot.png"
