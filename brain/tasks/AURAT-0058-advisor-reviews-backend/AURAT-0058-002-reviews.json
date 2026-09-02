@@ -1,0 +1,368 @@
+{
+  "task": "AURAT-0058",
+  "feature": "AURAF-0014",
+  "written": "2026-09-02",
+  "source": "SEED",
+  "note": "Тексты написаны под биографии из advisor-seed.data.ts: у каждого советника свой голос и своя специальность, отзывы между советниками не переставляются. Даты не задаются — порядок держит sortOrder, createdAt проставляет вставка. Тинт рецензента не хранится: он выводится на клиенте из имени (AURAT-0013 D6).",
+  "aggregates": "reviewsCount = число строк, ratingTenths = round(сумма ratingTenths / число строк). Ни одно среднее не попадает на ровную половину десятой, так что правило округления ни на кого не влияет.",
+  "advisors": [
+    {
+      "advisorId": "olivia",
+      "reviewsCount": 6,
+      "ratingTenths": 48,
+      "ratingExact": 48.333,
+      "reviews": [
+        {
+          "id": "olivia-01",
+          "authorName": "Daniela",
+          "quote": "Spot on and so kind. I left our chat feeling lighter.",
+          "ratingTenths": 50,
+          "sortOrder": 0
+        },
+        {
+          "id": "olivia-02",
+          "authorName": "Marcus",
+          "quote": "Accurate details I never mentioned. A real gift.",
+          "ratingTenths": 50,
+          "sortOrder": 10
+        },
+        {
+          "id": "olivia-03",
+          "authorName": "Rosa",
+          "quote": "Thirty years shows. No theatre, just steady answers.",
+          "ratingTenths": 50,
+          "sortOrder": 20
+        },
+        {
+          "id": "olivia-04",
+          "authorName": "Tom",
+          "quote": "Warm and unhurried. I only wish I had led with my real question.",
+          "ratingTenths": 40,
+          "sortOrder": 30
+        },
+        {
+          "id": "olivia-05",
+          "authorName": "Priya",
+          "quote": "I asked about my mother and got more than I was ready for.",
+          "ratingTenths": 50,
+          "sortOrder": 40
+        },
+        {
+          "id": "olivia-06",
+          "authorName": "Nina",
+          "quote": "Kind, but not soft. Named the part I had been avoiding.",
+          "ratingTenths": 50,
+          "sortOrder": 50
+        }
+      ]
+    },
+    {
+      "advisorId": "sunshine",
+      "reviewsCount": 5,
+      "ratingTenths": 46,
+      "ratingExact": 46.0,
+      "reviews": [
+        {
+          "id": "sunshine-01",
+          "authorName": "Grace",
+          "quote": "Came in tangled and left with one simple thing to do next.",
+          "ratingTenths": 50,
+          "sortOrder": 0
+        },
+        {
+          "id": "sunshine-02",
+          "authorName": "Omar",
+          "quote": "Comforting, though more general than I had hoped for.",
+          "ratingTenths": 40,
+          "sortOrder": 10
+        },
+        {
+          "id": "sunshine-03",
+          "authorName": "Elena",
+          "quote": "The angel side is not my usual thing and it still landed.",
+          "ratingTenths": 50,
+          "sortOrder": 20
+        },
+        {
+          "id": "sunshine-04",
+          "authorName": "Beatriz",
+          "quote": "Gentle, unhurried, and no push to book more minutes.",
+          "ratingTenths": 50,
+          "sortOrder": 30
+        },
+        {
+          "id": "sunshine-05",
+          "authorName": "Yuki",
+          "quote": "Honest insight. I would come back with a narrower question.",
+          "ratingTenths": 40,
+          "sortOrder": 40
+        }
+      ]
+    },
+    {
+      "advisorId": "veronica",
+      "reviewsCount": 7,
+      "ratingTenths": 47,
+      "ratingExact": 47.143,
+      "reviews": [
+        {
+          "id": "veronica-01",
+          "authorName": "Hannah",
+          "quote": "Direct, exactly as advertised. No warm-up, straight into it.",
+          "ratingTenths": 50,
+          "sortOrder": 0
+        },
+        {
+          "id": "veronica-02",
+          "authorName": "Peter",
+          "quote": "Ten minutes and I had what I came for.",
+          "ratingTenths": 50,
+          "sortOrder": 10
+        },
+        {
+          "id": "veronica-03",
+          "authorName": "Lucia",
+          "quote": "Said plainly what the cards did not show. That mattered.",
+          "ratingTenths": 50,
+          "sortOrder": 20
+        },
+        {
+          "id": "veronica-04",
+          "authorName": "Andrei",
+          "quote": "Very quick. I had to ask twice to slow the pace down.",
+          "ratingTenths": 40,
+          "sortOrder": 30
+        },
+        {
+          "id": "veronica-05",
+          "authorName": "Fatima",
+          "quote": "Uplifting without pretending everything is fine.",
+          "ratingTenths": 50,
+          "sortOrder": 40
+        },
+        {
+          "id": "veronica-06",
+          "authorName": "Dave",
+          "quote": "Good reading. The tarot part was stronger than the rest.",
+          "ratingTenths": 40,
+          "sortOrder": 50
+        },
+        {
+          "id": "veronica-07",
+          "authorName": "Ingrid",
+          "quote": "Thirty-five years of practice is audible within a minute.",
+          "ratingTenths": 50,
+          "sortOrder": 60
+        }
+      ]
+    },
+    {
+      "advisorId": "may",
+      "reviewsCount": 4,
+      "ratingTenths": 45,
+      "ratingExact": 45.0,
+      "reviews": [
+        {
+          "id": "may-01",
+          "authorName": "Sofia",
+          "quote": "The cord-cutting session was calmer than I expected.",
+          "ratingTenths": 50,
+          "sortOrder": 0
+        },
+        {
+          "id": "may-02",
+          "authorName": "Nadia",
+          "quote": "Helpful, though I needed the terms explained as we went.",
+          "ratingTenths": 40,
+          "sortOrder": 10
+        },
+        {
+          "id": "may-03",
+          "authorName": "Leo",
+          "quote": "Distance work sounded far-fetched to me. I still left it lighter.",
+          "ratingTenths": 50,
+          "sortOrder": 20
+        },
+        {
+          "id": "may-04",
+          "authorName": "Amara",
+          "quote": "Warm and patient. I wanted more structure to the session.",
+          "ratingTenths": 40,
+          "sortOrder": 30
+        }
+      ]
+    },
+    {
+      "advisorId": "labsang",
+      "reviewsCount": 5,
+      "ratingTenths": 48,
+      "ratingExact": 48.0,
+      "reviews": [
+        {
+          "id": "labsang-01",
+          "authorName": "Karan",
+          "quote": "Deep background, and none of it used to impress you.",
+          "ratingTenths": 50,
+          "sortOrder": 0
+        },
+        {
+          "id": "labsang-02",
+          "authorName": "Mira",
+          "quote": "Quiet, careful, and very sure of what they were doing.",
+          "ratingTenths": 50,
+          "sortOrder": 10
+        },
+        {
+          "id": "labsang-03",
+          "authorName": "Stefan",
+          "quote": "Fascinating session. Parts of it went over my head.",
+          "ratingTenths": 40,
+          "sortOrder": 20
+        },
+        {
+          "id": "labsang-04",
+          "authorName": "Aisha",
+          "quote": "Handled a heavy subject without making it heavier.",
+          "ratingTenths": 50,
+          "sortOrder": 30
+        },
+        {
+          "id": "labsang-05",
+          "authorName": "Ruth",
+          "quote": "Unhurried in a way I did not know I needed.",
+          "ratingTenths": 50,
+          "sortOrder": 40
+        }
+      ]
+    },
+    {
+      "advisorId": "alisher",
+      "reviewsCount": 5,
+      "ratingTenths": 48,
+      "ratingExact": 48.0,
+      "reviews": [
+        {
+          "id": "alisher-01",
+          "authorName": "Ben",
+          "quote": "Described something from my childhood I had never mentioned.",
+          "ratingTenths": 50,
+          "sortOrder": 0
+        },
+        {
+          "id": "alisher-02",
+          "authorName": "Carla",
+          "quote": "Calm and precise. No dramatics about the past-life part.",
+          "ratingTenths": 50,
+          "sortOrder": 10
+        },
+        {
+          "id": "alisher-03",
+          "authorName": "Jonas",
+          "quote": "Interesting throughout. I would have liked more practical advice.",
+          "ratingTenths": 40,
+          "sortOrder": 20
+        },
+        {
+          "id": "alisher-04",
+          "authorName": "Meera",
+          "quote": "Answers came fast and stayed specific.",
+          "ratingTenths": 50,
+          "sortOrder": 30
+        },
+        {
+          "id": "alisher-05",
+          "authorName": "Theo",
+          "quote": "Easy to talk to for someone who works with such heavy material.",
+          "ratingTenths": 50,
+          "sortOrder": 40
+        }
+      ]
+    },
+    {
+      "advisorId": "marta",
+      "reviewsCount": 6,
+      "ratingTenths": 47,
+      "ratingExact": 46.667,
+      "reviews": [
+        {
+          "id": "marta-01",
+          "authorName": "Alina",
+          "quote": "Sat with the break-up part instead of rushing me past it.",
+          "ratingTenths": 50,
+          "sortOrder": 0
+        },
+        {
+          "id": "marta-02",
+          "authorName": "Chris",
+          "quote": "Kind and clear. I hoped for more on what to do next.",
+          "ratingTenths": 40,
+          "sortOrder": 10
+        },
+        {
+          "id": "marta-03",
+          "authorName": "Sara",
+          "quote": "Never once told me what I wanted to hear.",
+          "ratingTenths": 50,
+          "sortOrder": 20
+        },
+        {
+          "id": "marta-04",
+          "authorName": "Dmitri",
+          "quote": "Confidential and unjudgmental, exactly as promised.",
+          "ratingTenths": 50,
+          "sortOrder": 30
+        },
+        {
+          "id": "marta-05",
+          "authorName": "Bea",
+          "quote": "Good session. The energetic side interested me less than the rest.",
+          "ratingTenths": 40,
+          "sortOrder": 40
+        },
+        {
+          "id": "marta-06",
+          "authorName": "Nour",
+          "quote": "I came for a yes or no and left with a better question.",
+          "ratingTenths": 50,
+          "sortOrder": 50
+        }
+      ]
+    },
+    {
+      "advisorId": "ivan",
+      "reviewsCount": 4,
+      "ratingTenths": 45,
+      "ratingExact": 45.0,
+      "reviews": [
+        {
+          "id": "ivan-01",
+          "authorName": "Katya",
+          "quote": "The coaching background shows. Practical, not just cards.",
+          "ratingTenths": 50,
+          "sortOrder": 0
+        },
+        {
+          "id": "ivan-02",
+          "authorName": "Milo",
+          "quote": "Solid astrology reading. The healing part was not for me.",
+          "ratingTenths": 40,
+          "sortOrder": 10
+        },
+        {
+          "id": "ivan-03",
+          "authorName": "Renata",
+          "quote": "Patient with a lot of questions and no rush on the clock.",
+          "ratingTenths": 50,
+          "sortOrder": 20
+        },
+        {
+          "id": "ivan-04",
+          "authorName": "Pavel",
+          "quote": "Good value for the time. I would book longer next time.",
+          "ratingTenths": 40,
+          "sortOrder": 30
+        }
+      ]
+    }
+  ]
+}
