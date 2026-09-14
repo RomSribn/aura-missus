@@ -37,7 +37,7 @@ also keeps `AURAD-0005`'s EU requirement intact, so no amendment was needed.
 
 | Resource | What | Address |
 |---|---|---|
-| `aura-bff` | NestJS, Dockerfile build pack | `https://bff-dev.aura-app.cc` (+ `bff.aura-app.cc`, temporary — see *Environments*) |
+| `aura-bff` | NestJS, Dockerfile build pack | `https://bff-dev.aura-app.cc` |
 | `aura-chatwoot` | rails + sidekiq, Docker Compose build pack | `https://chat.aura-app.cc` |
 | `aura-postgres` | `pgvector/pgvector:pg16` | internal only |
 | `aura-redis` | `redis:7.2` | internal only |
@@ -256,13 +256,15 @@ A **Source** is the GitHub connection — one, shared by every application.
 
 | | |
 |---|---|
-| BFF | `https://bff-dev.aura-app.cc`, plus `https://bff.aura-app.cc` as a **temporary** second domain for Play internal-testing builds older than `AURAT-0068` |
+| BFF | `https://bff-dev.aura-app.cc`. The old `bff.aura-app.cc` was dropped from the application the same day; its DNS record stays, reserved for production |
 | App target | `staging` — `npm run aab:staging`; `env/.env.prod` keeps the future production address |
 | Chatwoot | inbox `Aura (dev)` (#1) and bot `Aura BFF Bot (dev)` (#1), both pointed at `https://bff-dev.aura-app.cc/webhooks/chatwoot` |
 
-Remove `bff.aura-app.cc` from `aura-bff`'s domains once testers run a `staging`
-build, then Redeploy — Traefik picks domains up only on deploy. The BFF request
-log's `host` field shows whether anything still arrives on it.
+A host that no application claims answers **`503 no available server`**, not
+404 — Coolify's catch-all (`/data/coolify/proxy/dynamic/default_redirect_503.yaml`,
+`PathPrefix(/)` at priority −1000). That is what `bff.aura-app.cc` returns now.
+Domain changes reach Traefik only on Redeploy; before dropping one, the BFF
+request log's `host` field shows whether anything still arrives on it.
 
 Moving the BFF's public host touches exactly four places: the Coolify domain,
 the Cloudflare A record (DNS-only), the inbox `webhook_url` **and** the bot
@@ -566,6 +568,7 @@ all; the services unescape them.
 | Agent reply marked "Failed to send", but the app received it anyway | The reconciliation poll covered for a broken webhook — exactly what it is for. Check the inbox `webhook_url` and the Agent Bot `outgoing_url`; both must be the public URL |
 | `Could not resolve hostname 'bff'` on a message | The webhook is pointed at a Docker-network name. Coolify cannot give this application one — use the environment's public host, today `https://bff-dev.aura-app.cc/webhooks/chatwoot` |
 | Agent replies reach the app only after a delay, since the BFF's domain changed | The webhook still names the old host and the reconciliation poll is covering. Update the inbox `webhook_url` **and** the bot `outgoing_url` |
+| `503 no available server` on one of our hostnames | No application claims that host, so Coolify's catch-all answers. Check the application's Domains in the panel, then Redeploy |
 | "Conversation was marked open by system due to an error with the agent bot" | The agent bot's webhook failed. It should not be running at all — check `AgentBotInbox.status` is `inactive` |
 | Chatters see nothing under "Open" while users are writing | An agent bot is active on the inbox, so conversations are born `pending`. Deactivate the link, then open the stranded ones |
 | App gets 429s under light load | `trustProxy` regression — every device sharing one rate-limit budget |

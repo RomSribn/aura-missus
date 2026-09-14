@@ -22,7 +22,7 @@ Status: **решено владельцем 2026-09-14**
 |---|---|---|
 | Coolify | environment `development`, проект `aura` | новое **пустое** environment, не *Clone Environment* |
 | Ветка `aura-bff` | `develop` | `main` (создана 14.09 на `daf42bd`, пока ничего не деплоит) |
-| BFF | `https://bff-dev.aura-app.cc` (+ `bff.aura-app.cc` временно, пока тестировщики не обновятся) | `https://bff.aura-app.cc` |
+| BFF | `https://bff-dev.aura-app.cc` (старый `bff.aura-app.cc` снят 14.09) | `https://bff.aura-app.cc` |
 | Приложение | target `staging`, `npm run aab:staging` | target `prod`, `aab:prod` заводится при запуске |
 | Postgres | `aura_bff` в `aura-postgres` | своя база и роль там же, `REVOKE CONNECT … FROM PUBLIC` |
 | Redis | `aura-redis`, db 1 | отдельный контейнер |
