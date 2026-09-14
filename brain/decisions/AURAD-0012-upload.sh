@@ -24,7 +24,7 @@ cd "$SRC"
 # Полколоды в бакете — это поломка, которую заметит первый человек, которому
 # выпадет недостающая карта. Поэтому сначала проверяем всё, потом льём.
 declare -A BY_HASH
-for f in *.png; do
+for f in *.jpg; do
   BY_HASH["$(shasum -a 256 "$f" | cut -d' ' -f1)"]="$f"
 done
 
@@ -40,7 +40,7 @@ while IFS=$'\t' read -r sha key; do
   src="${BY_HASH[$sha]}"
   aws s3api put-object \
     --bucket "$BUCKET" --key "$key" --body "$src" \
-    --content-type image/png \
+    --content-type image/jpeg \
     --cache-control 'public, max-age=31536000, immutable' \
     --endpoint-url "$R2_ENDPOINT" >/dev/null
   printf '.'
