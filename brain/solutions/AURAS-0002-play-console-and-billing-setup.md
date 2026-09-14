@@ -42,12 +42,18 @@ and read it before filling the form rather than after.
 ### 3. Upload the first AAB
 
 ```bash
-cd android
 # A release build must name its target — there is no default (AURAT-0028).
-AURA_ENV=tunnel ./gradlew :app:bundleRelease   # https tunnel to the manor Mac
-AURA_ENV=prod   ./gradlew :app:bundleRelease   # once AURAT-0029 has deployed it
-# → app/build/outputs/bundle/release/app-release.aab
+npm run aab:staging    # Play internal testing → bff-dev.aura-app.cc (AURAT-0068)
+cd android && AURA_ENV=tunnel ./gradlew :app:bundleRelease   # https tunnel to the manor Mac
+# → android/app/build/outputs/bundle/release/app-release.aab
 ```
+
+**Internal testing builds with `npm run aab:staging`**: the hosted development
+environment (Coolify `development`, test data), billing flags switched on for
+the build. There is deliberately no `npm run aab` and no prod command yet —
+`bff.aura-app.cc` belongs to the real backend created at launch, and `aab:prod`
+arrives with it (AURAT-0068). Every upload needs a higher `versionCode` in
+`android/app/build.gradle`.
 
 **This step now also decides which backend the AAB talks to.** Before
 `AURAT-0028` it did not, because it could not: the release bundle compiled in an
@@ -55,7 +61,7 @@ unresolvable placeholder, so an uploaded build reached nothing and this step
 could produce an artifact that proved little. A target with no host, or a
 cleartext `http` host, now fails the build instead.
 
-Until the backend is deployed, use **`tunnel`**: run the BFF on the manor Mac,
+To test against the BFF on the manor Mac instead, use **`tunnel`**: run it locally,
 expose it over https (`cloudflared tunnel --url http://localhost:3000`), and put
 the URL in `aura-app/env/.env.tunnel.local` — gitignored, never committed:
 
