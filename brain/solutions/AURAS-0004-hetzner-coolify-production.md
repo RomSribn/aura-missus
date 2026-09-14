@@ -550,6 +550,30 @@ Private keys (Firebase, Play) go in as **one line with escaped `\n`, in
 quotes**. A multi-line value cannot be carried in an environment variable at
 all; the services unescape them.
 
+### R2 tokens: one per bucket, verified
+
+All four buckets live in one Cloudflare account, each reached by its own
+**Account** token scoped to that bucket alone. Verified 2026-09-14 by having
+every in-use key list every bucket:
+
+| Key held by | Can read |
+|---|---|
+| BFF (`AVATAR_STORAGE_*`) | `aura-user-media` only |
+| Chatwoot (`CW_STORAGE_*`) | `aura-chatwoot` only |
+| Coolify backups (`r2-backups`) | `aura-backups` only |
+
+`aura-assets` (public, `assets.aura-app.cc`) has **no** standing write token:
+the one-off `aura-assets-storage` was deleted that day, and no token scoped to
+all buckets exists. Upload through the dashboard, or mint a token with a TTL for
+the one operation. An R2 Access Key ID *is* the token's ID, so a key found in a
+container matches the ID in its dashboard URL.
+
+For production at launch: its own `aura-user-media-prod` (EU jurisdiction, no
+public access) with its own token; `aura-assets` and `aura-chatwoot` stay
+shared; and the production database must be **added** to the backup's
+`databases_to_backup` — the list is explicit and Coolify will not pick a new
+database up by itself.
+
 ---
 
 ## When it breaks
@@ -602,11 +626,12 @@ all; the services unescape them.
   so. `AURAF-0011` / `AURAT-0031` / `AURAT-0032` cover it, blocked on how the app
   is to receive the bytes (Chatwoot's own attachment URL is **public and
   unauthenticated** — verified — so it must never be handed to a device).
-- **Whether any purchase so far was real is not recorded.** The ledger holds 10
-  Play top-ups ($260, 2026-08-20 … 09-01) that passed the **real** verifier —
-  under `NODE_ENV=production` the fake refuses — but the BFF stores no test
-  flag. Play Console → Order management marks test orders; check it before
-  treating this data as disposable, which `AURAD-0015` assumes.
+- **Every purchase so far was a test order** — confirmed by the owner in Play
+  Console → Order management, 2026-09-14. The ledger's 10 Play top-ups ($260,
+  2026-08-20 … 09-01) passed the **real** verifier (under
+  `NODE_ENV=production` the fake refuses), so the rail works against Google;
+  the BFF stores no test flag, which is why the console had to answer this. No
+  real-money purchase has happened yet.
 - **No real purchase has been verified** (written 2026-08-19, before the
   top-ups above). `TECH-DEBT #17` is only partly paid —
   the verifier has spoken to Google and been correctly refused, but no genuine
