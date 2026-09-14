@@ -1,8 +1,16 @@
 # AURAS-0004 — Production: Hetzner + Coolify, and how to operate it
 
-Date: 2026-08-19
-Status: **running.** This is the document to follow; `AURAS-0003` (AWS) is on
-hold and describes infrastructure that was never applied.
+Date: 2026-08-19 · updated 2026-09-14
+Status: **running — as the pre-launch `development` environment.** This is the
+document to follow; `AURAS-0003` (AWS) is on hold and describes infrastructure
+that was never applied.
+
+> **2026-09-14: what runs here is not production any more.** The data on this
+> host is test data, so its only Coolify environment was renamed `production` →
+> `development` and the BFF moved to `bff-dev.aura-app.cc`. Real production is
+> **created from scratch at launch**, never renamed back from this one —
+> `AURAD-0015` holds the decision, *Environments* below the mechanics. The title
+> keeps the old word so existing references still find this document.
 Feeds: `AURAT-0029`. Sources: `AURAD-0005` (one VM, EU, docker compose),
 `AURAD-0004` (stack), `AURAS-0001` (dev Chatwoot), `AURAS-0002` (Play).
 
@@ -17,7 +25,7 @@ not observed, it says so.
 |---|---|
 | Host | Hetzner **CX33** — 4 vCPU, 8 GB, 80 GB, **Helsinki** (EU) |
 | OS | Ubuntu 24.04 LTS, 4 GB swap, unattended security upgrades, fail2ban |
-| Panel | Coolify 4.3.9 at `https://coolify.aura-app.cc` |
+| Panel | Coolify **4.3.19** (as of 2026-09-14) at `https://coolify.aura-app.cc` |
 | Proxy | Traefik (Coolify's), Let's Encrypt |
 | **Cost** | **$12.81/month** |
 
@@ -29,7 +37,7 @@ also keeps `AURAD-0005`'s EU requirement intact, so no amendment was needed.
 
 | Resource | What | Address |
 |---|---|---|
-| `aura-bff` | NestJS, Dockerfile build pack | `https://bff.aura-app.cc` |
+| `aura-bff` | NestJS, Dockerfile build pack | `https://bff-dev.aura-app.cc` (+ `bff.aura-app.cc`, temporary — see *Environments*) |
 | `aura-chatwoot` | rails + sidekiq, Docker Compose build pack | `https://chat.aura-app.cc` |
 | `aura-postgres` | `pgvector/pgvector:pg16` | internal only |
 | `aura-redis` | `redis:7.2` | internal only |
@@ -41,6 +49,14 @@ These are the Coolify resources, and they are **not** everything answering on
 Both applications deploy from **`RomSribn/aura-bff`** — the BFF from the root
 `Dockerfile`, Chatwoot from `deploy/coolify/chatwoot.compose.yml`. One
 repository, one production configuration, no copy pasted into a panel to drift.
+
+All four are resources of Coolify project **`aura`**, environment
+**`development`** (named `production` until 2026-09-14).
+
+Measured at idle on 2026-09-08 (`AURAI-0004`): 2.5 of 7.6 GiB used, disk 17 of
+75 G, load 0.06. Chatwoot is the heavy half (rails + sidekiq ≈ 961 MB); BFF,
+Postgres and Redis together ≈ 188 MB; the panel itself ≈ 376 MB. A floor, not a
+working load — measure again once real traffic arrives.
 
 ### Exposed surface
 
@@ -170,8 +186,12 @@ the previous version keeps serving.
 
 Three things to know:
 
-- **The deployed branch is `feature/AURAT-0029-aws-deploy`.** After the merge,
-  point Coolify at `develop` or it keeps deploying the feature branch.
+- **The deployed branch is `develop`**, for both applications, always its
+  latest commit (`git_commit_sha = HEAD`) — so `wts-finish` into `develop`
+  deploys this environment. `main` exists since 2026-09-14 (created at
+  `daf42bd`, the commit both apps were running) and deploys nothing until
+  production exists; after launch a release is a merge `develop` → `main`,
+  approved each time.
 - **One push redeploys BOTH services.** The Chatwoot application is git-backed
   too — same repository, same branch, `docker_compose_location =
   /deploy/coolify/chatwoot.compose.yml`. Coolify re-reads that file on every
@@ -179,7 +199,7 @@ Three things to know:
   containers. Convenient (editing the compose in the repo *is* deploying it)
   and easy to forget: there is no such thing here as a push that touches only
   one service.
-- **There is no gate.** A push with a bad migration reaches production.
+- **There is no gate.** A push with a bad migration reaches whatever environment tracks that branch.
 - **Rolling updates**: the new container starts while the old one serves. An
   additive migration survives that window; a destructive one does not. Use
   expand/contract when the first destructive migration appears.
@@ -221,6 +241,79 @@ Related and separate: **a panel cannot express "absent"**. An unset variable is
 stored as an empty string, and `validateEnv` now drops empty values before
 parsing, because Zod's `.optional()` means "may be undefined" and `''` is a
 present value that fails `.min(1)`.
+
+---
+
+## Environments
+
+In Coolify an **environment is a folder for resources, not a machine.** It does
+not decide where a resource runs (each resource's server / destination does) and
+isolates nothing: every container on this host shares the `coolify` Docker
+network and resolves `aura-postgres`, `aura-redis` and `chatwoot-rails` by name.
+A **Source** is the GitHub connection — one, shared by every application.
+
+### Now (since 2026-09-14): one environment, `development`
+
+| | |
+|---|---|
+| BFF | `https://bff-dev.aura-app.cc`, plus `https://bff.aura-app.cc` as a **temporary** second domain for Play internal-testing builds older than `AURAT-0068` |
+| App target | `staging` — `npm run aab:staging`; `env/.env.prod` keeps the future production address |
+| Chatwoot | inbox `Aura (dev)` (#1) and bot `Aura BFF Bot (dev)` (#1), both pointed at `https://bff-dev.aura-app.cc/webhooks/chatwoot` |
+
+Remove `bff.aura-app.cc` from `aura-bff`'s domains once testers run a `staging`
+build, then Redeploy — Traefik picks domains up only on deploy. The BFF request
+log's `host` field shows whether anything still arrives on it.
+
+Moving the BFF's public host touches exactly four places: the Coolify domain,
+the Cloudflare A record (DNS-only), the inbox `webhook_url` **and** the bot
+`outgoing_url`, and the app's env target. Nothing at Google points at the BFF —
+the refund Pub/Sub subscriber was never built.
+
+### At launch: production is created, not renamed
+
+`AURAD-0015` has the decision. Mechanically: a new, **empty** environment
+`production` in project `aura`; its own database and role in `aura-postgres`
+(`REVOKE CONNECT … FROM PUBLIC`, `btree_gist` created as `postgres`); its **own**
+Redis container, because `maxmemory` is per instance and a shared db index lets
+one side's queues block the other's writes; `aura-bff` from `main` with every
+variable entered fresh and none marked build-time; `bff.aura-app.cc` as its
+domain; a new inbox from `provision-prod.rb`.
+
+`provision-prod.rb` finds things **by name**, which is why the test inbox and bot
+were renamed: with their old names (`Aura (prod)`, `Aura BFF Bot`) it would have
+handed production the test inbox. It also reuses the service User **by email**,
+so pass `AURA_SERVICE_USER_EMAIL` (e.g. `bff-prod@aura.internal`) or both
+environments share one token. A second administrator service User does not
+disturb presence: `assignable_agents` includes every administrator, but
+availability is set only over ActionCable and `auto_offline` defaults to `true`,
+so an API-only user always reads `offline` — as long as nobody signs into the
+dashboard as it. Pass `AURA_WEBHOOK_URL` explicitly: the script's default is the
+Docker-network address that never worked.
+
+Chatwoot then serves both environments while sitting in `development`; move it
+into an environment of its own at that point so the names stop lying.
+
+### Do not use *Clone Environment*
+
+Read against Coolify 4.3.19's source (`app/Livewire/Project/CloneMe.php`,
+`clone_application` in `bootstrap/helpers/applications.php`), it makes a second
+copy of this environment, not a new one:
+
+- **variables are copied verbatim** — a cloned BFF gets this `DATABASE_URL` and
+  `REDIS_URL`, runs `migrate deploy` and the seed against them at start, and its
+  workers consume the same BullMQ queues; tokens, keys and `NODE_ENV` come along;
+- **domains**: a compose application's are copied as they are
+  (`chat.aura-app.cc`); a Dockerfile application keeps its FQDN unless readonly
+  labels are on;
+- a Chatwoot clone on the same host claims the same `chatwoot-rails` alias, and
+  its sidekiq works the same database;
+- same repository and branch, so a push can deploy the clones;
+- databases keep their passwords and get **a copy of the backup schedule**;
+- **"Clone volume data" stops the source databases and applications** for the
+  copy, and carries their data across.
+
+Clones are created `exited`, so nothing happens until the first deploy — the only
+mercy. Three resources created by hand are less work than undoing this.
 
 ---
 
@@ -312,10 +405,13 @@ a sequel.
   and `provision-prod.rb` now takes the existing account rather than looking one
   up by name (which would have created a second one).
 - Its **own** `Channel::Api` inbox (`AURAD-0005`: one per environment), service
-  User and Agent Bot, provisioned by `deploy/chatwoot/provision-prod.rb`. The
-  webhook points at **`https://bff.aura-app.cc/webhooks/chatwoot`** — the
-  public hostname, deliberately, and it is **proven**: a real delivery returned
-  `204` with the signature verified.
+  User and Agent Bot, provisioned by `deploy/chatwoot/provision-prod.rb` — now
+  named `Aura (dev)` and `Aura BFF Bot (dev)` (see *Environments*). The webhook
+  points at **`https://bff-dev.aura-app.cc/webhooks/chatwoot`** — the public
+  hostname, deliberately, and it is **proven**: a real delivery returned `204`
+  with the signature verified — on `bff.` 2026-08-20, and again on `bff-dev.`
+  2026-09-14, where the BFF stored an agent's reply 0.3 s after Chatwoot created
+  it, i.e. by webhook rather than by the poll.
 
   It started as `http://bff:3000/webhooks/chatwoot` and never worked, because
   **Coolify gives a Dockerfile application no stable network name**. Its only
@@ -468,7 +564,8 @@ all; the services unescape them.
 | Tempted to configure CORS on the R2 bucket | Don't. Uploads are server-side multipart; CORS applies to nothing here |
 | `sh: nest: not found` | A build-time `NODE_ENV=production`; see the Dockerfile note above |
 | Agent reply marked "Failed to send", but the app received it anyway | The reconciliation poll covered for a broken webhook — exactly what it is for. Check the inbox `webhook_url` and the Agent Bot `outgoing_url`; both must be the public URL |
-| `Could not resolve hostname 'bff'` on a message | The webhook is pointed at a Docker-network name. Coolify cannot give this application one — use `https://bff.aura-app.cc/webhooks/chatwoot` |
+| `Could not resolve hostname 'bff'` on a message | The webhook is pointed at a Docker-network name. Coolify cannot give this application one — use the environment's public host, today `https://bff-dev.aura-app.cc/webhooks/chatwoot` |
+| Agent replies reach the app only after a delay, since the BFF's domain changed | The webhook still names the old host and the reconciliation poll is covering. Update the inbox `webhook_url` **and** the bot `outgoing_url` |
 | "Conversation was marked open by system due to an error with the agent bot" | The agent bot's webhook failed. It should not be running at all — check `AgentBotInbox.status` is `inactive` |
 | Chatters see nothing under "Open" while users are writing | An agent bot is active on the inbox, so conversations are born `pending`. Deactivate the link, then open the stranded ones |
 | App gets 429s under light load | `trustProxy` regression — every device sharing one rate-limit budget |
@@ -502,7 +599,13 @@ all; the services unescape them.
   so. `AURAF-0011` / `AURAT-0031` / `AURAT-0032` cover it, blocked on how the app
   is to receive the bytes (Chatwoot's own attachment URL is **public and
   unauthenticated** — verified — so it must never be handed to a device).
-- **No real purchase has been verified.** `TECH-DEBT #17` is only partly paid —
+- **Whether any purchase so far was real is not recorded.** The ledger holds 10
+  Play top-ups ($260, 2026-08-20 … 09-01) that passed the **real** verifier —
+  under `NODE_ENV=production` the fake refuses — but the BFF stores no test
+  flag. Play Console → Order management marks test orders; check it before
+  treating this data as disposable, which `AURAD-0015` assumes.
+- **No real purchase has been verified** (written 2026-08-19, before the
+  top-ups above). `TECH-DEBT #17` is only partly paid —
   the verifier has spoken to Google and been correctly refused, but no genuine
   token has been redeemed. On the first one, check that
   `obfuscatedExternalAccountId` comes back: the "user A cannot redeem user B's
