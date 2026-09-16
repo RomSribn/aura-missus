@@ -1,16 +1,16 @@
 # AURAS-0004 — Production: Hetzner + Coolify, and how to operate it
 
 Date: 2026-08-19 · updated 2026-09-16
-Status: **running — as the pre-launch `development` environment.** This is the
+Status: **running — two environments on one host: `production` (created
+2026-09-14 … 16, no real users yet) and `development` (test data).** This is the
 document to follow; `AURAS-0003` (AWS) is on hold and describes infrastructure
 that was never applied.
 
-> **2026-09-14: what runs here is not production any more.** The data on this
-> host is test data, so its only Coolify environment was renamed `production` →
-> `development` and the BFF moved to `bff-dev.aura-app.cc`. Real production is
-> **created from scratch at launch**, never renamed back from this one —
-> `AURAD-0015` holds the decision, *Environments* below the mechanics. The title
-> keeps the old word so existing references still find this document.
+> **History in two lines.** On 2026-09-14 the host's only environment turned out
+> to hold test data, so it was renamed `production` → `development` and its BFF
+> moved to `bff-dev.aura-app.cc` (`AURAD-0015`). Production was then created from
+> scratch next to it, and Chatwoot moved to production, serving both environments
+> through one account each (`AURAD-0016`). *Environments* below has the mechanics.
 Feeds: `AURAT-0029`. Sources: `AURAD-0005` (one VM, EU, docker compose),
 `AURAD-0004` (stack), `AURAS-0001` (dev Chatwoot), `AURAS-0002` (Play).
 
@@ -35,25 +35,28 @@ also keeps `AURAD-0005`'s EU requirement intact, so no amendment was needed.
 
 ### Services
 
-| Resource | What | Address |
-|---|---|---|
-| `aura-bff` | NestJS, Dockerfile build pack | `https://bff-dev.aura-app.cc` |
-| `aura-chatwoot` | rails + sidekiq, Docker Compose build pack | `https://chat.aura-app.cc` |
-| `aura-postgres` | `pgvector/pgvector:pg16` | internal only |
-| `aura-redis` | `redis:7.2` | internal only |
+Coolify project **`aura`**, two environments:
+
+| Environment | Resource | What | Address |
+|---|---|---|---|
+| `production` | `aura-bff` | NestJS, Dockerfile build pack, branch `main` | `https://bff.aura-app.cc` |
+| `production` | `aura-chatwoot` | rails + sidekiq, Docker Compose build pack, branch `main` — **serves both environments** (`AURAD-0016`) | `https://chat.aura-app.cc` |
+| `production` | `aura-postgres` | `pgvector/pgvector:pg16` — databases `aura_bff`, `chatwoot` | internal only |
+| `production` | `aura-redis` | `redis:7.2`, 256 MB — the BFF | internal only |
+| `production` | `aura-chatwoot-redis` | `redis:7.2`, 256 MB — Chatwoot | internal only |
+| `development` | `aura-bff` | NestJS, Dockerfile build pack, branch `develop` | `https://bff-dev.aura-app.cc` |
+| `development` | `aura-postgres` | `pgvector/pgvector:pg16` — database `aura_bff` | internal only |
+| `development` | `aura-redis` | `redis:7.2`, 512 MB — the BFF on db 1 | internal only |
 
 These are the Coolify resources, and they are **not** everything answering on
 `aura-app.cc`: the legal pages live on Netlify, off this host entirely — see
 *The legal pages are not on this host* below.
 
-Both applications deploy from **`RomSribn/aura-bff`** — the BFF from the root
+Every application deploys from **`RomSribn/aura-bff`** — the BFF from the root
 `Dockerfile`, Chatwoot from `deploy/coolify/chatwoot.compose.yml`. One
-repository, one production configuration, no copy pasted into a panel to drift.
+repository, no copy pasted into a panel to drift.
 
-All four are resources of Coolify project **`aura`**, environment
-**`development`** (named `production` until 2026-09-14).
-
-Measured at idle on 2026-09-08 (`AURAI-0004`): 2.5 of 7.6 GiB used, disk 17 of
+Measured at idle on 2026-09-08 (`AURAI-0004`), before production existed: 2.5 of 7.6 GiB used, disk 17 of
 75 G, load 0.06. Chatwoot is the heavy half (rails + sidekiq ≈ 961 MB); BFF,
 Postgres and Redis together ≈ 188 MB; the panel itself ≈ 376 MB. A floor, not a
 working load — measure again once real traffic arrives.
@@ -69,10 +72,13 @@ TLS.
 
 ## Data layout, and the one line that makes it real
 
-**One Postgres server, two databases, two roles.** `AURAD-0004` wants Chatwoot
-on its own database; 8 GB does not want two servers. This is the middle ground,
-and it is not cosmetic: `aura_bff` holds the append-only money ledger, and
-Chatwoot is a large third-party Rails app with a much bigger attack surface.
+**One Postgres server per environment; inside production, two databases and two
+roles.** `AURAD-0004` wants Chatwoot on its own database; 8 GB does not want a
+third server. Production's `aura-postgres` holds `aura_bff` (role `aura`) and
+`chatwoot` (role `chatwoot`); development's holds only its own `aura_bff` (role
+`aura`, a different password). The split inside production is not cosmetic:
+`aura_bff` holds the append-only money ledger, and Chatwoot is a large
+third-party Rails app with a much bigger attack surface.
 
 ```sql
 REVOKE CONNECT ON DATABASE aura_bff FROM PUBLIC;
@@ -86,6 +92,12 @@ attempting the connections rather than reading the grants:
 chatwoot → aura_bff : FATAL: permission denied ... does not have CONNECT privilege
 aura     → chatwoot : same
 ```
+
+Test isolation **over the Docker network** (from another container), never from
+inside the Postgres container: the official image trusts loopback
+(`host all all 127.0.0.1/32 trust`), so any password "works" there. Production
+was checked this way on 2026-09-14 and 16: `aura` and `chatwoot` each reach only
+their own database, and development's `aura` password is refused.
 
 ### Extensions must be created by the superuser, before first boot
 
@@ -111,12 +123,14 @@ ran against it. A Postgres major version cannot be changed afterwards.
 
 ### Redis
 
-One instance. **Chatwoot on db 0, BFF on db 1.** No ACL — the contents are
-queues and cache. The residual risk is named rather than hidden: a `FLUSHALL`
-from Chatwoot's side would wipe the BFF's BullMQ queues.
+**One instance per consumer in production** — `aura-redis` for the BFF,
+`aura-chatwoot-redis` for Chatwoot, 256 MB each — so a `FLUSHALL` or a runaway
+queue on one side cannot touch the other. Development keeps one `aura-redis`
+(512 MB) with the BFF on db 1; db 0 held Chatwoot until 2026-09-16 and is empty.
+No ACL — the contents are queues and cache. Every instance runs:
 
 ```
-maxmemory 512mb
+maxmemory <256mb|512mb>
 maxmemory-policy noeviction
 ```
 
@@ -130,9 +144,18 @@ would be Postgres.
 
 ## Backups
 
-Coolify's scheduled backup, **both databases**, `0 3 * * *` UTC, to **Cloudflare
-R2** (`aura-backups`, EU jurisdiction). Local retention 3 copies / 7 days / 5 GB;
-S3 retention 14 copies / 30 days, size unlimited.
+Coolify's scheduled backups to **Cloudflare R2** (`aura-backups`, EU
+jurisdiction), one schedule per Postgres server:
+
+| Server | Databases | When (UTC) | Retention |
+|---|---|---|---|
+| production `aura-postgres` | `aura_bff`, `chatwoot` | `30 3 * * *` | local 3 copies / 7 days / 5 GB; S3 14 copies / 30 days, size unlimited |
+| development `aura-postgres` | `aura_bff` | `0 3 * * *` | **none set** — the panel stores zeros, i.e. unlimited |
+
+Production's schedule was created 2026-09-16 and run once by hand: both dumps
+`success`, uploaded to R2. Until that day this document gave development the
+production retention values, but the panel had never held them; set them if its
+local copies start to matter for disk.
 
 The retention split is deliberate. Locally the size cap is a **fuse**: 80 GB is
 shared with both databases, Docker and logs, and filling it takes Postgres down.
@@ -172,14 +195,19 @@ Chatwoot has ~92 tables and the BFF its migrations** — the assertions above ar
 what make it meaningful, and they need data to be meaningful about.
 
 Attachments are **not** in these dumps: they live in `aura-chatwoot`, its own
-bucket and its own durability story.
+bucket and its own durability story. That story has one sharp edge, learned
+2026-09-16: **deleting a Chatwoot inbox deletes its conversations in the
+background and purges their files from R2.** A dump taken an hour earlier
+restored every row and none of the 35 files. Before deleting an inbox whose
+attachments matter, copy the bucket objects first.
 
 ### A restore brings deleted accounts back
 
 Since `AURAT-0042` a person can delete their account, and a dump taken before
-that still holds their conversations, profile and push tokens. The 30-day
-retention above is therefore also how long a deletion can be undone by a
-restore — the privacy policy names this, and **the restore has to put it right**.
+that still holds their conversations, profile and push tokens. The retention
+above is therefore also how long a deletion can be undone by a restore — 30
+days in production, which the privacy policy names; development has no limit
+set at all — and **the restore has to put it right**.
 
 After restoring a dump and before letting traffic onto it, repeat every
 deletion made since the dump was taken. The BFF logs each one as
@@ -207,19 +235,20 @@ the previous version keeps serving.
 
 Three things to know:
 
-- **The deployed branch is `develop`**, for both applications, always its
-  latest commit (`git_commit_sha = HEAD`) — so `wts-finish` into `develop`
-  deploys this environment. `main` exists since 2026-09-14 (created at
-  `daf42bd`, the commit both apps were running) and deploys nothing until
-  production exists; after launch a release is a merge `develop` → `main`,
-  approved each time.
-- **One push redeploys BOTH services.** The Chatwoot application is git-backed
-  too — same repository, same branch, `docker_compose_location =
-  /deploy/coolify/chatwoot.compose.yml`. Coolify re-reads that file on every
-  push, so a commit touching only the BFF still recreates the Chatwoot
-  containers. Convenient (editing the compose in the repo *is* deploying it)
-  and easy to forget: there is no such thing here as a push that touches only
-  one service.
+- **The branch decides the environment**, always the branch's latest commit
+  (`git_commit_sha = HEAD`), auto-deploy on:
+  - `develop` → development's `aura-bff`. `wts-finish` into `develop` deploys
+    there and nowhere else.
+  - `main` → production's `aura-bff` **and** `aura-chatwoot`. A release is a
+    merge `develop` → `main`, approved by the owner each time. `main` was created
+    2026-09-14 at `daf42bd` and fast-forwarded to `1fa9fbe` for production's
+    first deploy.
+- **A push to `main` redeploys BOTH production services.** Chatwoot is
+  git-backed too (`docker_compose_location = /deploy/coolify/chatwoot.compose.yml`)
+  and Coolify re-reads that file on every push, so a release touching only the
+  BFF still recreates the Chatwoot containers — about a minute of chat downtime.
+  Editing the compose in the repo *is* deploying it. Until 2026-09-14 Chatwoot
+  tracked `develop`, so every feature merge restarted the chat; it no longer does.
 - **There is no gate.** A push with a bad migration reaches whatever environment tracks that branch.
 - **Rolling updates**: the new container starts while the old one serves. An
   additive migration survives that window; a destructive one does not. Use
@@ -273,17 +302,23 @@ isolates nothing: every container on this host shares the `coolify` Docker
 network and resolves `aura-postgres`, `aura-redis` and `chatwoot-rails` by name.
 A **Source** is the GitHub connection — one, shared by every application.
 
-### Now (since 2026-09-14): one environment, `development`
+### Now (since 2026-09-16): two environments
 
-| | |
-|---|---|
-| BFF | `https://bff-dev.aura-app.cc`. The old `bff.aura-app.cc` was dropped from the application the same day; its DNS record stays, reserved for production |
-| App target | `staging` — `npm run aab:staging`; `env/.env.prod` keeps the future production address |
-| Chatwoot | inbox `Aura (dev)` (#1) and bot `Aura BFF Bot (dev)` (#1), both pointed at `https://bff-dev.aura-app.cc/webhooks/chatwoot` |
+| | `production` | `development` |
+|---|---|---|
+| BFF | `https://bff.aura-app.cc`, branch `main` | `https://bff-dev.aura-app.cc`, branch `develop` |
+| App target | `prod` (`aab:prod` not created yet) | `staging` — `npm run aab:staging` / `apk:staging` |
+| Chatwoot account | 1 «Aura»: inbox `Aura (prod)` (#2), bot #2, `bff-prod@aura.internal`; owner + chatters | 2 «Aura Dev»: inbox `Aura` (#3), bot #3, `bff-dev@aura.internal`; owner only |
+| Postgres / Redis | own `aura-postgres`; `aura-redis`, `aura-chatwoot-redis` | own `aura-postgres`, `aura-redis` |
+| Avatar bucket | `aura-user-media-prod` | `aura-user-media` |
+| Data | seeded catalogue; no users yet | test data, restored 2026-09-16 (below) |
+
+Isolation between them is Chatwoot's account boundary, checked with real
+requests: development's token → account 1 `401`, production's → account 2 `401`.
 
 A host that no application claims answers **`503 no available server`**, not
 404 — Coolify's catch-all (`/data/coolify/proxy/dynamic/default_redirect_503.yaml`,
-`PathPrefix(/)` at priority −1000). That is what `bff.aura-app.cc` returns now.
+`PathPrefix(/)` at priority −1000). That is what `bff.aura-app.cc` returned between 2026-09-14 and production's first deploy.
 Domain changes reach Traefik only on Redeploy; before dropping one, the BFF
 request log's `host` field shows whether anything still arrives on it.
 
@@ -292,29 +327,43 @@ the Cloudflare A record (DNS-only), the inbox `webhook_url` **and** the bot
 `outgoing_url`, and the app's env target. Nothing at Google points at the BFF —
 the refund Pub/Sub subscriber was never built.
 
-### At launch: production is created, not renamed
+### How production was created (2026-09-14 … 16)
 
-`AURAD-0015` has the decision. Mechanically: a new, **empty** environment
-`production` in project `aura`; its own database and role in `aura-postgres`
-(`REVOKE CONNECT … FROM PUBLIC`, `btree_gist` created as `postgres`); its **own**
-Redis container, because `maxmemory` is per instance and a shared db index lets
-one side's queues block the other's writes; `aura-bff` from `main` with every
-variable entered fresh and none marked build-time; `bff.aura-app.cc` as its
-domain; a new inbox from `provision-prod.rb`.
+`AURAD-0015` has the decision; this is what was done, in order.
 
-`provision-prod.rb` finds things **by name**, which is why the test inbox and bot
-were renamed: with their old names (`Aura (prod)`, `Aura BFF Bot`) it would have
-handed production the test inbox. It also reuses the service User **by email**,
-so pass `AURA_SERVICE_USER_EMAIL` (e.g. `bff-prod@aura.internal`) or both
-environments share one token. A second administrator service User does not
-disturb presence: `assignable_agents` includes every administrator, but
-availability is set only over ActionCable and `auto_offline` defaults to `true`,
-so an API-only user always reads `offline` — as long as nobody signs into the
-dashboard as it. Pass `AURA_WEBHOOK_URL` explicitly: the script's default is the
-Docker-network address that never worked.
+1. **`main` fast-forwarded** to `develop`, so production did not start on code
+   older than development.
+2. **An empty environment `production`** — never *Clone Environment* (below).
+3. **Its own Postgres.** Picker card *PGVector 17*, image edited to
+   `pgvector/pgvector:pg16` **before first start** — the *PostgreSQL 16* card is
+   `postgres:16-alpine`, whose musl collation would order text indexes
+   differently from development's Debian image. Default user `postgres`; role
+   `aura` and database `aura_bff` created by hand, `REVOKE CONNECT … FROM
+   PUBLIC`, `btree_gist` as `postgres`.
+4. **Its own Redis per consumer**, `maxmemory` + `noeviction`.
+5. **`aura-user-media-prod`** and a token scoped to it alone.
+6. **`aura-bff` from `main`.** Two defaults had to be undone: the build pack came
+   up as **Railpack**, which would skip our `Dockerfile` and with it the
+   migrations and the seed; and the domain as a generated `sslip.io` host.
+   Variables pasted in the *Developer view* arrive marked build-time like any
+   others — un-mark every one.
+7. **Chatwoot moved to production** — the next sections.
+8. **Backups** for production's Postgres (*Backups*).
 
-Chatwoot then serves both environments while sitting in `development`; move it
-into an environment of its own at that point so the names stop lying.
+Checked after the first deploy: all migrations and the seed applied, `/health`
+`200`, unsigned webhook `401`, unauthenticated API `401`, `/docs` `404`, and the
+container talks to its own Postgres and Redis only. The very first deploy failed
+cloning the private repository without credentials (`could not read Username`);
+the retry with unchanged settings passed.
+
+`provision-prod.rb` finds inbox and bot **by name**, reuses the service User **by
+email**, takes the **first** account unless told otherwise, and defaults the
+webhook to the Docker-network address that never worked. Always pass
+`AURA_ACCOUNT_ID`, `AURA_INBOX_NAME`, `AURA_WEBHOOK_URL` and
+`AURA_SERVICE_USER_EMAIL`. An extra administrator service User does not disturb
+presence: availability is set only over ActionCable and `auto_offline` defaults to
+`true`, so an API-only user always reads `offline` — as long as nobody signs into
+the dashboard as it.
 
 ### Do not use *Clone Environment*
 
@@ -337,6 +386,52 @@ copy of this environment, not a new one:
 
 Clones are created `exited`, so nothing happens until the first deploy — the only
 mercy. Three resources created by hand are less work than undoing this.
+
+It happened anyway on 2026-09-14: a clone of `aura-chatwoot` appeared in
+`production` with the same domains, alias, database and Redis. It stayed harmless
+because its first deploy failed (the repository field had been changed to a
+Chatwoot fork without our compose file) and auto-deploy was switched off before
+the next push. Repointed at `aura-bff`, it was deployed on purpose as a second
+replica of the same configuration, and the original was **stopped** — a handover
+without downtime. That clone *is* production's `aura-chatwoot` now.
+
+### Moving Chatwoot's data between servers (2026-09-16)
+
+About two minutes of chat downtime; the order is what makes it safe.
+
+1. Create role and database on the target, and the four extensions as `postgres`
+   (`pg_stat_statements`, `pg_trgm`, `pgcrypto`, `vector`). An "empty" target is
+   then one whose only `public` objects are the two `pg_stat_statements` views.
+2. Check sidekiq has nothing queued, retried or dead — Redis is switched, not
+   copied.
+3. Stop `aura-chatwoot`; confirm zero connections to the source database.
+4. `pg_dump -Fc`, then `pg_restore --no-owner --no-privileges` **as the
+   `chatwoot` role** so it owns every table, with the dump's `EXTENSION` entries
+   filtered out of the list. Compare exact row counts table by table, and the id
+   sequences.
+5. Change only `CW_POSTGRES_HOST`, `CW_POSTGRES_PASSWORD`, `CW_REDIS_URL`,
+   `CW_REDIS_PASSWORD` — **never** `CW_SECRET_KEY_BASE` or the `CW_AR_*` keys,
+   which would leave encrypted columns unreadable — and deploy.
+
+### Moving conversations between Chatwoot accounts (2026-09-16)
+
+Development's history lived in account 1; it was re-created in account 2 with its
+original ids, so the BFF's stored references kept working.
+
+- Ids of contacts, contact inboxes, conversations and messages are **global**
+  sequences, so freed ids can be inserted again as they were.
+- The BFF stores a conversation's **`display_id`**, numbered **per account** by
+  trigger `conversations_before_insert_row_tr`, which always overwrites it from
+  `conv_dpid_seq_<account_id>`. Insert under `SET LOCAL session_replication_role
+  = replica` — which also switches foreign keys off, so check for orphans
+  afterwards — then `setval('conv_dpid_seq_<account>', max(display_id))`.
+- Rewrite `account_id` and `inbox_id`, clear assignees who are not members of the
+  target account, and remap message senders whose user no longer exists.
+- Attachment rows were left out: their files had already been purged.
+
+Deleting a User with `destroy!` enqueues `Agents::DestroyJob`, which then fails
+for ever with `undefined method 'notification_settings' for nil`. Confirm nothing
+references the user and remove the job from `retry`.
 
 ---
 
@@ -423,18 +518,19 @@ a sequel.
 
 ## Chatwoot specifics
 
-- Account **`Aura`** (id 1). The BFF addresses Chatwoot by
-  **`CHATWOOT_ACCOUNT_ID`**, a number — the name is for the humans at the desk,
-  and `provision-prod.rb` now takes the existing account rather than looking one
-  up by name (which would have created a second one).
-- Its **own** `Channel::Api` inbox (`AURAD-0005`: one per environment), service
-  User and Agent Bot, provisioned by `deploy/chatwoot/provision-prod.rb` — now
-  named `Aura (dev)` and `Aura BFF Bot (dev)` (see *Environments*). The webhook
-  points at **`https://bff-dev.aura-app.cc/webhooks/chatwoot`** — the public
-  hostname, deliberately, and it is **proven**: a real delivery returned `204`
-  with the signature verified — on `bff.` 2026-08-20, and again on `bff-dev.`
-  2026-09-14, where the BFF stored an agent's reply 0.3 s after Chatwoot created
-  it, i.e. by webhook rather than by the poll.
+- **One installation, one account per environment** (`AURAD-0016`): account 1
+  **`Aura`** for production, account 2 **`Aura Dev`** for development. The BFF
+  addresses Chatwoot by **`CHATWOOT_ACCOUNT_ID`**, a number — the name is for the
+  humans at the desk, who switch accounts from the name in the top left corner.
+- Each account has its **own** `Channel::Api` inbox, service User and Agent Bot,
+  provisioned by `deploy/chatwoot/provision-prod.rb` with explicit parameters
+  (see *Environments*). Each webhook points at its environment's **public**
+  hostname — `https://bff.aura-app.cc/webhooks/chatwoot` and
+  `https://bff-dev.aura-app.cc/webhooks/chatwoot` — deliberately, and it is
+  **proven**: real deliveries returned `204` with the signature verified on
+  2026-08-20, on 2026-09-14 (an agent's reply stored 0.3 s after Chatwoot created
+  it, i.e. by webhook rather than by the poll) and in `Aura Dev` on 2026-09-16 in
+  both directions.
 
   It started as `http://bff:3000/webhooks/chatwoot` and never worked, because
   **Coolify gives a Dockerfile application no stable network name**. Its only
@@ -579,7 +675,8 @@ every in-use key list every bucket:
 
 | Key held by | Can read |
 |---|---|
-| BFF (`AVATAR_STORAGE_*`) | `aura-user-media` only |
+| development BFF (`AVATAR_STORAGE_*`) | `aura-user-media` only |
+| production BFF (`AVATAR_STORAGE_*`) | `aura-user-media-prod` only (checked 2026-09-14) |
 | Chatwoot (`CW_STORAGE_*`) | `aura-chatwoot` only |
 | Coolify backups (`r2-backups`) | `aura-backups` only |
 
@@ -589,11 +686,14 @@ all buckets exists. Upload through the dashboard, or mint a token with a TTL for
 the one operation. An R2 Access Key ID *is* the token's ID, so a key found in a
 container matches the ID in its dashboard URL.
 
-For production at launch: its own `aura-user-media-prod` (EU jurisdiction, no
-public access) with its own token; `aura-assets` and `aura-chatwoot` stay
-shared; and the production database must be **added** to the backup's
-`databases_to_backup` — the list is explicit and Coolify will not pick a new
-database up by itself.
+`aura-assets` and `aura-chatwoot` are shared by both environments. Backup
+database lists are explicit — Coolify does not pick a new database up by itself.
+
+Production's values were assembled on the host in `/root/aura-prod` (mode 0600)
+while being pasted into Coolify, and deleted afterwards. What remains there are
+two dumps taken before the 2026-09-16 moves — development's BFF and the old
+Chatwoot database. Delete them once they stop being a safety net: they hold test
+users' conversations.
 
 ---
 
@@ -611,9 +711,12 @@ database up by itself.
 | Tempted to configure CORS on the R2 bucket | Don't. Uploads are server-side multipart; CORS applies to nothing here |
 | `sh: nest: not found` | A build-time `NODE_ENV=production`; see the Dockerfile note above |
 | Agent reply marked "Failed to send", but the app received it anyway | The reconciliation poll covered for a broken webhook — exactly what it is for. Check the inbox `webhook_url` and the Agent Bot `outgoing_url`; both must be the public URL |
-| `Could not resolve hostname 'bff'` on a message | The webhook is pointed at a Docker-network name. Coolify cannot give this application one — use the environment's public host, today `https://bff-dev.aura-app.cc/webhooks/chatwoot` |
+| `Could not resolve hostname 'bff'` on a message | The webhook is pointed at a Docker-network name. Coolify cannot give this application one — use the environment's public host: `https://bff.aura-app.cc/webhooks/chatwoot` or `https://bff-dev.aura-app.cc/webhooks/chatwoot` |
 | Agent replies reach the app only after a delay, since the BFF's domain changed | The webhook still names the old host and the reconciliation poll is covering. Update the inbox `webhook_url` **and** the bot `outgoing_url` |
 | `503 no available server` on one of our hostnames | No application claims that host, so Coolify's catch-all answers. Check the application's Domains in the panel, then Redeploy |
+| Chatwoot deploy fails with `Docker Compose file not found at: /deploy/coolify/chatwoot.compose.yml` | The application's repository is no longer `RomSribn/aura-bff` — a Chatwoot fork has no such file. Repoint it and check `repository_project_id` matches the BFF's |
+| Two containers answer `chatwoot-rails` or `chat.aura-app.cc` | A clone of `aura-chatwoot` is running. With identical settings it is a harmless replica; stop one, never the serving one before the other is up |
+| A service token gets `401 You are not authorized to access this account` | Expected across environments: each service User belongs to one account only. Within its own environment, check `CHATWOOT_ACCOUNT_ID` |
 | "Conversation was marked open by system due to an error with the agent bot" | The agent bot's webhook failed. It should not be running at all — check `AgentBotInbox.status` is `inactive` |
 | Chatters see nothing under "Open" while users are writing | An agent bot is active on the inbox, so conversations are born `pending`. Deactivate the link, then open the stranded ones |
 | App gets 429s under light load | `trustProxy` regression — every device sharing one rate-limit budget |
@@ -661,4 +764,9 @@ database up by itself.
   token" guarantee rests on that field arriving.
 - **Play Console reports an issue with the payments profile**, which blocks real
   purchases independently of everything here.
-- **The restore drill needs repeating** against populated databases.
+- **The restore drill needs repeating** against populated databases. The
+  2026-09-16 moves restored real data (row counts per table and wallet balances
+  against the ledger matched), but the append-only trigger was not made to fire.
+- **Production end to end.** Its BFF, Chatwoot account and webhook are checked
+  piece by piece, but no build pointed at `bff.aura-app.cc` has yet sent a message
+  and received a chatter's reply, and `aab:prod` does not exist.
