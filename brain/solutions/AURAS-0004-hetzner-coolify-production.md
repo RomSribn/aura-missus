@@ -673,17 +673,29 @@ a sequel.
   the set only when the next job dies — so a daily **Scheduled Task** in Coolify
   does it instead:
 
-  Application `aura-chatwoot`, container `sidekiq` (the compose service name),
-  frequency `30 3 * * *`, command:
+  Task `sidekiq-dead-set-7-days` (uuid `1dr8c4gpajt6v9bbruriw3pk`) on application
+  `aura-chatwoot`, container `sidekiq`, frequency `30 3 * * *` (the instance runs
+  on UTC), timeout 300 s, command:
 
   ```
   bundle exec rails runner 'Sidekiq::DeadSet.new.each { |job| job.delete if job.at < 7.days.ago }'
   ```
 
   Bound: 7 days plus a day. The cost: a dead job older than a week can no longer
-  be retried from the Sidekiq UI. Run the command once by hand before saving the
-  task, then `Sidekiq::DeadSet.new.count { |job| job.at < 7.days.ago }` in the
-  same container must be `0`. **Status: see *Not yet proven*.**
+  be retried from the Sidekiq UI.
+
+  **Created 2026-09-16 and run once through Coolify's own job** — execution
+  `success` in 7 s. The container field takes the **compose service name**:
+  `ScheduledTaskJob` matches running containers by the prefix
+  `<container>-<application uuid>`, i.e. `sidekiq-forqvdvibl9wjec2yk0mqkeo…`, and
+  wraps the command in `sh -c '…'` with single quotes escaped, so the command
+  above goes in as written. Before that, the same command ran by hand in the
+  container (about 6 s for the Rails boot; the dead set was empty, so nothing
+  was deleted). It was created with `php artisan tinker` in the `coolify`
+  container, setting the same fields the API's create endpoint sets, because the
+  instance has no API token; it shows under the application's *Scheduled Tasks*
+  like any other. Its executions (status and output) are on the task's page, or
+  `ScheduledTask::where('uuid', '1dr8c4gpajt6v9bbruriw3pk')->first()->executions`.
 - **Mail via Resend** — free tier, EU region, domain verified, an actual message
   delivered. Without it Chatwoot cannot invite an agent, reset a password, or
   tell an operator a conversation is waiting, and all three fail silently.
@@ -861,9 +873,9 @@ users' conversations.
   containers booted, that a message sent from the app leaves no `Parameters:` or
   `with arguments` in either log, and that
   `rails runner 'Rails.logger.warn("probe-warn"); Rails.logger.info("probe-info")'`
-  prints only `probe-warn`. The Scheduled Task is not created yet; whether
-  Coolify's container field takes the compose service name `sidekiq` is to be
-  seen in the panel.
+  prints only `probe-warn`. The dead-set Scheduled Task is created and has run
+  once on demand (*Chatwoot specifics*); its first **scheduled** run is
+  2026-09-17 03:30 UTC.
 - **Production end to end.** Its BFF, Chatwoot account and webhook are checked
   piece by piece, but no build pointed at `bff.aura-app.cc` has yet sent a message
   and received a chatter's reply, and `aab:prod` does not exist.
