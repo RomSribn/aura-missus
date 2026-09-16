@@ -1,6 +1,6 @@
 # AURAS-0004 — Production: Hetzner + Coolify, and how to operate it
 
-Date: 2026-08-19 · updated 2026-09-14
+Date: 2026-08-19 · updated 2026-09-16
 Status: **running — as the pre-launch `development` environment.** This is the
 document to follow; `AURAS-0003` (AWS) is on hold and describes infrastructure
 that was never applied.
@@ -173,6 +173,27 @@ what make it meaningful, and they need data to be meaningful about.
 
 Attachments are **not** in these dumps: they live in `aura-chatwoot`, its own
 bucket and its own durability story.
+
+### A restore brings deleted accounts back
+
+Since `AURAT-0042` a person can delete their account, and a dump taken before
+that still holds their conversations, profile and push tokens. The 30-day
+retention above is therefore also how long a deletion can be undone by a
+restore — the privacy policy names this, and **the restore has to put it right**.
+
+After restoring a dump and before letting traffic onto it, repeat every
+deletion made since the dump was taken. The BFF logs each one as
+`account erased` with the account's `userId`, and a deleted row keeps its id,
+so the ids from the log since the dump's timestamp are exactly what to run:
+
+```bash
+node dist/account-erasure.js --user <userId>   # inside the BFF container, once per id
+```
+
+It deletes again what the dump brought back, and queues the Firebase identity,
+the desk contact and the photograph again — each of those treats "already gone"
+as done. An id the restored database already shows as deleted answers
+"already erased".
 
 ---
 
