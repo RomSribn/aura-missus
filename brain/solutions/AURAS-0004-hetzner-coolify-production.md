@@ -140,6 +140,16 @@ nothing appears in any log. `noeviction` fails the write loudly instead. With no
 `maxmemory` at all, Redis grows until the OOM killer picks a victim — here that
 would be Postgres.
 
+**What the queues keep is on disk too, so it has a term** (`AURAT-0074`). Every
+instance snapshots `dump.rdb` into its docker volume (not into the R2 backup),
+and a job's data can be personal. The BFF keeps a finished job's record a
+**day** once completed and **7 days** once failed; an hourly `queue-retention`
+job cleans every queue, because BullMQ's own `age` only acts when the next job
+in the same queue finishes. Bound: the term plus an hour. Chatwoot's Sidekiq
+keeps no completed jobs, but its **dead set** holds failed jobs with their
+arguments for 180 days by default — trimmed to 7 days by a scheduled task, see
+*Chatwoot specifics*.
+
 ---
 
 ## Backups
@@ -592,9 +602,9 @@ a sequel.
   `InvalidRequest: You can only specify one non-default checksum at a time.`
 
   Budget an hour if you meet this without knowing it, because **every signal
-  lies**. Rails logs `S3 Storage … Uploaded file to key: …` for the upload that
-  just failed — ActiveStorage's instrumentation logs its event even when the
-  block inside raised. The message row keeps an attachment pointing at an object
+  lies**. At `info`, Rails logged `S3 Storage … Uploaded file to key: …` for the
+  upload that just failed — ActiveStorage's instrumentation logs its event even
+  when the block inside raised (at `warn` it logs nothing either way). The message row keeps an attachment pointing at an object
   that does not exist. Chatwoot answers `422` and the dashboard shows the file as
   **sent**, so the chatter believes it arrived. The only honest signal is the
   response body, and it is not in the logs: reproduce the POST with
@@ -608,8 +618,53 @@ a sequel.
   carry a checksum, which together look exactly like browser-direct upload. They
   are not. Chatwoot's dashboard posts the file as ordinary multipart to Rails —
   `POST …/messages` with `"attachments" => [ActionDispatch::Http::UploadedFile]`
-  — and Rails uploads it server-side, where CORS never applies. One look at the
-  request log settles it; inference from the route table does not.
+  — and Rails uploads it server-side, where CORS never applies. The request log
+  settled it that day; it is gone since Chatwoot logs at `warn` (below), so
+  reproduce the POST instead — inference from the route table does not settle it.
+- **Logs at `warn`, not `info`** (`AURAT-0074`). At `info` both containers
+  write personal data on the ordinary path: rails logs the `Parameters:` of
+  every request — the text of each message the BFF sends, contacts' phone
+  numbers — and ActiveJob logs the arguments of every job. Chatwoot's parameter
+  filter covers only passwords, tokens and keys. `LOG_LEVEL: warn` sits in the
+  compose (`x-chatwoot` → `environment`), read by rails
+  (`config/environments/production.rb`) and by sidekiq
+  (`config/initializers/sidekiq.rb`) alike. It takes effect with a release to
+  `main`, like any compose change.
+
+  - **Fatal when wrong.** Anything but a Ruby Logger level name — `warning`, an
+    empty string — raises `NameError` at boot, and rails **and** sidekiq
+    restart-loop. That is why it is not a panel variable.
+  - **Not everything goes.** A job that fails reaches Sidekiq's default error
+    handler, which writes the whole job — arguments included, so possibly a
+    phone number and message data — at **WARN**. The ordinary path is silent;
+    a failure is not. The likeliest failure is `ActionCableBroadcastJob` finding
+    no conversation after an account was deleted. Also still logged: SMTP errors
+    (operators' addresses) and unhandled request exceptions (class, message,
+    backtrace — no parameters). The Agent Bot's webhook job would log its whole
+    payload on 429/5xx, which is one more reason its link stays `inactive`.
+  - **Diagnosis without a request log.** The request lines (`Started`,
+    `Parameters:`, `Completed 500`) are gone. Reproduce the call with
+    `api_access_token` and read the response body; check outcomes in
+    `rails console`. Do not raise the level to look: it is a commit and a
+    release, and it brings the personal data back until reverted.
+
+  **Dead jobs are kept a week, not 180 days.** After `:max_retries: 3` (minutes)
+  a failed job moves to Sidekiq's dead set with its arguments, kept by default
+  for 180 days / 10 000 jobs. There is no variable for that, and Sidekiq trims
+  the set only when the next job dies — so a daily **Scheduled Task** in Coolify
+  does it instead:
+
+  Application `aura-chatwoot`, container `sidekiq` (the compose service name),
+  frequency `30 3 * * *`, command:
+
+  ```
+  bundle exec rails runner 'Sidekiq::DeadSet.new.each { |job| job.delete if job.at < 7.days.ago }'
+  ```
+
+  Bound: 7 days plus a day. The cost: a dead job older than a week can no longer
+  be retried from the Sidekiq UI. Run the command once by hand before saving the
+  task, then `Sidekiq::DeadSet.new.count { |job| job.at < 7.days.ago }` in the
+  same container must be `0`. **Status: see *Not yet proven*.**
 - **Mail via Resend** — free tier, EU region, domain verified, an actual message
   delivered. Without it Chatwoot cannot invite an agent, reset a password, or
   tell an operator a conversation is waiting, and all three fail silently.
@@ -716,7 +771,9 @@ users' conversations.
 | BFF exits naming a private key | The key does not parse. Read it **inside the container**, not in the panel — see the escaping trap above |
 | Every authenticated route 401s, `/health` green, app shows "couldn't load advisors" | Firebase credential, not the token. The guard logs the reason: `app/invalid-credential` is ours to fix, `auth/*` is the caller's. Response body length also tells them apart — 74 bytes is a missing header, 78 a rejected token |
 | `EAI_AGAIN chatwoot-rails` in BFF logs | The alias is gone. Coolify's only automatic alias is the bare service name `rails`; `chatwoot-rails` is claimed explicitly in the compose |
-| Attachment shows as sent in Chatwoot but the image is broken | The object is not in R2. Check `ActiveStorage::Blob.service.exist?(blob.key)`, **not** the log — Rails prints "Uploaded file to key" for uploads that raised. Almost always the double-checksum trap above |
+| Attachment shows as sent in Chatwoot but the image is broken | The object is not in R2. Check `ActiveStorage::Blob.service.exist?(blob.key)`, **not** the log — at `info` Rails printed "Uploaded file to key" for uploads that raised, at `warn` it prints nothing. Almost always the double-checksum trap above |
+| Chatwoot rails and sidekiq both restart-loop with `NameError` right after a compose change | `LOG_LEVEL` is not a Logger level name (`warning`, empty). Only `debug`/`info`/`warn`/`error`/`fatal` boot |
+| Need to see what a Chatwoot request carried | There is no request log at `warn`. Reproduce the call with `api_access_token` and read the body; do not raise `LOG_LEVEL` to look |
 | `422` on `POST …/messages` with an attachment | Read the response body, it carries the real reason. `You can only specify one non-default checksum at a time` = `AWS_REQUEST_CHECKSUM_CALCULATION` is missing |
 | Tempted to configure CORS on the R2 bucket | Don't. Uploads are server-side multipart; CORS applies to nothing here |
 | `sh: nest: not found` | A build-time `NODE_ENV=production`; see the Dockerfile note above |
@@ -777,6 +834,15 @@ users' conversations.
 - **The restore drill needs repeating** against populated databases. The
   2026-09-16 moves restored real data (row counts per table and wallet balances
   against the ledger matched), but the append-only trigger was not made to fire.
+- **Chatwoot logs at `warn` and the dead-set task** (`AURAT-0074`, written
+  2026-09-16). `LOG_LEVEL: warn` is in the compose on `develop` and reaches
+  Chatwoot only with the next release to `main`; after it, check that both
+  containers booted, that a message sent from the app leaves no `Parameters:` or
+  `with arguments` in either log, and that
+  `rails runner 'Rails.logger.warn("probe-warn"); Rails.logger.info("probe-info")'`
+  prints only `probe-warn`. The Scheduled Task is not created yet; whether
+  Coolify's container field takes the compose service name `sidekiq` is to be
+  seen in the panel.
 - **Production end to end.** Its BFF, Chatwoot account and webhook are checked
   piece by piece, but no build pointed at `bff.aura-app.cc` has yet sent a message
   and received a chatter's reply, and `aab:prod` does not exist.
