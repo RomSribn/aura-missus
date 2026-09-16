@@ -2,9 +2,10 @@
 
 Дата: 2026-09-16
 Пишет: `aura-app-manor` / `slave-0`
-Статус: **draft — ждёт утверждения владельца вместе со спекой `105`**
-Фактура: `107-app-legal-audit`; решения: `106`, `108`; удаление: `008`/`009`
-половины BFF.
+Статус: **draft** — текст сверен с проверками в маноре (`115`, правка
+2026-09-16); публиковать после условий из части 2
+Фактура: `107-app-legal-audit`, `115-manor-checks`; решения: `106`, `108`;
+удаление: `008`/`009` половины BFF; проверка личности: черновик `116`.
 
 Файл из двух частей:
 
@@ -200,6 +201,11 @@ Push notification tokens — until you sign out, delete your account, or the
 token stops working.
 Server logs — kept in rotating files that are overwritten as new entries
 arrive; we do not archive them.
+Delivery queues — messages and notifications on their way between the app,
+our advisor team and your device pass through queues on our servers. The
+queues keep a limited number of recent entries, which newer entries replace;
+they are not included in backups and are not cleared when you delete your
+account.
 Backups — our databases are backed up daily and each backup is kept for up to
 30 days, so deleted data disappears from backups within 30 days. If we ever
 have to restore a backup, we repeat the deletions made after it was taken.
@@ -223,7 +229,10 @@ first.
 09 · Security
 Traffic between the app and our servers is encrypted in transit. Our app
 serves attachments and profile photos only to the signed-in account they
-belong to. Sign-in relies on a one-time code sent to your phone rather than a
+belong to. Inside our customer-conversation tool, attachments and profile
+photos open through long, unguessable links that work without signing in;
+these links are shown only to our advisor team and are never sent to your
+device or to other users. Sign-in relies on a one-time code sent to your phone rather than a
 reusable password. No service can promise perfect security, so please keep
 access to your phone number and device protected. If a breach ever affects
 your rights, we will notify you and the Inspectorate as the GDPR requires.
@@ -479,6 +488,11 @@ Kept:
   and text removed;
 - technical audit entries in our customer-conversation tool about
   conversation settings, which contain no message text;
+- recent entries in the queues that carry messages and notifications through
+  our servers, until newer entries replace them;
+- a record that the account was deleted and when, without your name, phone
+  number or contact details, so that the deletion can be repeated if a backup
+  is ever restored;
 - database backups made before the deletion, for up to 30 days, after which
   they are overwritten.
 More about how we handle data: Privacy Policy (/privacy/).
@@ -497,37 +511,71 @@ More about how we handle data: Privacy Policy (/privacy/).
    адреса** и дождаться (`106` #9). Без этого страница удаления — тупик.
 2. **Что должно быть в проде** — текст описывает именно это:
    - `aura-bff`: `AURAT-0042` (удаление) и `AURAT-0072` (имя на контакте
-     Chatwoot), релиз `develop → main`;
+     Chatwoot) — **в проде** с 2026-09-16 (`main` = `781957a`);
+   - `aura-bff`: **`AURAT-0073`** — журнал удалений вне базы. Без него фраза
+     §07 «we repeat the deletions made after it was taken» ни на что не
+     опирается;
+   - `aura-bff`: **`AURAT-0074`** — `LOG_LEVEL: warn` у Chatwoot и FCM-токен
+     вне лога BFF. Без него в логах стойки тексты сообщений и телефоны, а §02
+     и §07 называют логи техническими. До Chatwoot доходит только релизом в
+     `main`;
    - `aura-app` в Play: экран удаления, строка 18+ на входе, выключенное по
-     умолчанию согласие на маркетинг (`105` часть A).
-3. **Шесть проверок в маноре** (`107` §6). Любой ответ «да» меняет текст:
+     умолчанию согласие на маркетинг (`105` часть A) — сборка `20`, пока
+     internal testing.
+3. **Шесть проверок в маноре** (`107` §6) — **сделаны**, `115`. Что
+   получилось и чем закрыто (решение владельца 2026-09-16 — правка продукта
+   там, где она есть):
 
-   | Проверка | Если «да» — что дописать |
-   |---|---|
-   | Логи `chatwoot-rails` содержат тексты и телефоны | в §07 privacy: логи стойки со сроком хранения; и в «Kept» на странице удаления |
-   | Traefik пишет access log | §07: срок хранения логов прокси |
-   | Письма Resend операторам цитируют текст сообщений | §05: Resend получает фрагменты сообщений |
-   | В Chatwoot включён перевод (Google / OpenAI) | §05 и §06: новый получатель текстов |
-   | `avatar_url` контакта Chatwoot открывается без авторизации | §09: убрать «photos» из фразы про выдачу только владельцу |
-   | Redis пишется на диск и попадает в бэкап | §07: тексты ответов операторов в очереди |
+   | Проверка | Ответ | Чем закрыто |
+   |---|---|---|
+   | Логи Chatwoot с текстами и телефонами | да | продукт: `AURAT-0074`; текст не меняется |
+   | Traefik пишет access log | нет | — |
+   | Письма Resend операторам цитируют текст | да (назначение, создание, упоминание) | продукт: письма выключены у всех операторов 2026-09-16; §05 не меняется |
+   | Перевод или AI в Chatwoot | получателя нет | продукт: флаг `captain_tasks` выключен; §05–06 не меняются |
+   | `avatar_url` контакта открывается без входа | да, как и вложения | текст: §09 — ссылки стойки работают без входа, видны только команде |
+   | Redis на диске и в бэкапе | на диске да, в бэкапе нет | текст: §07 «Delivery queues» и «Kept» на странице удаления |
 
-4. **Дата.** `[PUBLICATION DATE]` → дата, трижды.
-5. **После сборки в Claude Design** — пройти глазами: ни одного App Store,
+   Сверх списка: журнал удалений (`AURAT-0073`) — отсюда пункт «a record that
+   the account was deleted» в «Kept».
+4. **Не ломать сказанное настройками стойки.** Текст опирается на три
+   настройки Chatwoot, и каждую можно тихо вернуть:
+   - новому оператору Chatwoot сам включает письмо о назначении — выключать
+     при добавлении (`AURAS-0004`, «Adding a colleague»);
+   - ключ OpenAI или интеграцию (перевод, Dialogflow и т. п.) не добавлять,
+     не дописав получателя в §05 и §06;
+   - `LOG_LEVEL` в compose не поднимать обратно до `info`.
+
+5. **Дата.** `[PUBLICATION DATE]` → дата, трижды.
+6. **После сборки в Claude Design** — пройти глазами: ни одного App Store,
    три страницы по своим адресам, `mailto:` работают, ничего не дописано от
    себя (номер регистрации, адрес, цены — их в тексте нет намеренно).
-6. **Play Console:** privacy URL `https://aura-app.cc/privacy/`, URL удаления
+7. **Play Console:** privacy URL `https://aura-app.cc/privacy/`, URL удаления
    `https://aura-app.cc/delete-account/`, Data safety — таблица ниже.
-7. **После публикации:** снять опубликованный текст в brain тем же рецептом,
+8. **После публикации:** снять опубликованный текст в brain тем же рецептом,
    что `AURAT-0040-009` (`AURAS-0004`, «The legal pages are not on this
    host») — это единственная копия под контролем версий.
 
 ## Известные дыры, которые текст не закрывает
 
 - **Проверка личности при запросе по почте.** Страница говорит «We may ask
-  you for details to make sure the account is yours», но процедуры нет:
-  CLI `account:erase --phone` удалит любой номер, который назовут. Нужно
-  решить, что спрашивать (например, дату последней покупки или имя в
-  профиле), до первого настоящего письма.
+  you for details to make sure the account is yours». Процедура есть только
+  черновиком (`116`): до решения владельца CLI `account:erase --phone` удалит
+  любой номер, который назовут. Если для Play выбрать вариант B (страница
+  с входом по SMS), §02 страницы удаления переписывается под вход на странице
+  — до сборки в Claude Design.
+- **Очереди держат записи без срока.** Только по счёту:
+  - BFF: `removeOnComplete` 1 000 и `removeOnFail` 5 000 на очередь. В
+    очереди вебхука лежит текст ответа оператора, в повторах пушей — токены
+    устройств;
+  - Chatwoot: упавшие задачи до 180 дней или 10 000 штук, в аргументах
+    телефоны и тексты. На 16.09 таких задач 0.
+
+  При малом трафике «newer entries replace» — это недели и месяцы, и
+  удаление аккаунта очереди не чистит. Отсюда честная строка в §07 и в
+  «Kept». Правка продукта — срок жизни записей в очередях BFF (`age` рядом
+  с `count`), например сутки для выполненных. Если её сделать, в §07
+  заменить «which newer entries replace; … are not cleared when you delete
+  your account» на срок, а пункт в «Kept» — на «… for up to <срок>».
 - **Лендинг `/`** не входит в бриф, но на нём бейдж «Download on the App
   Store» и **нет ссылки на Google Play** (`Get the app` ведёт на `/#get`).
   §12 privacy теперь говорит «sends you to Google Play» — лендинг стоит
@@ -587,7 +635,12 @@ More about how we handle data: Privacy Policy (/privacy/).
 | Нет аналитики, крашей, рекламного ID | релизный манифест сборки 19; `package.json` обоих репозиториев |
 | IP и User-Agent в логах сервера, ротация по объёму | `app.module.ts:32-39`, `fastify.options.ts:14-33`; `AURAS-0004` (3×10 МБ) |
 | Hetzner (Хельсинки), R2 в EU, Resend EU, Netlify | `AURAS-0004` |
-| Бэкапы ежедневно, до 30 дней; повтор стираний после восстановления | `AURAS-0004`; `008` D4 |
+| Бэкапы ежедневно, до 30 дней; повтор стираний после восстановления | `AURAS-0004`; `008` D4; опора — `AURAT-0073` |
+| Логи серверов без текстов, телефонов и токенов | `115` п. 1 и находка 2; `AURAT-0074` |
+| Ссылки стойки на вложения и фото работают без входа, устройству не уходят | `AURAD-0011`; `115` п. 5 |
+| Очереди: ограниченное число записей, не в бэкапе, удаление не чистит | `jobs/queues.ts` (`removeOnComplete`/`removeOnFail`), Sidekiq `dead_timeout` 180 дней / 10 000 на проде; `115` п. 6 |
+| Запись об удалении без имени и телефона | `schema.prisma` `AccountErasure` (хэндлы чистятся по завершении); `AURAT-0073` |
+| Resend не получает текстов; AI-получателя нет | `115` п. 3–4, настройки выключены 2026-09-16 |
 | Что удаляется и что остаётся | `008` §1–2, `009` (Q1–Q4) |
 | Отказ удаления при живой сессии | `008` Q1 |
 | Остаток сгорает; возвраты по запросу вручную | `008` Q4; `108` #13 |
