@@ -209,19 +209,37 @@ above is therefore also how long a deletion can be undone by a restore — 30
 days in production, which the privacy policy names; development has no limit
 set at all — and **the restore has to put it right**.
 
-After restoring a dump and before letting traffic onto it, repeat every
-deletion made since the dump was taken. The BFF logs each one as
-`account erased` with the account's `userId`, and a deleted row keeps its id,
-so the ids from the log since the dump's timestamp are exactly what to run:
+The record of what to repeat lives outside the database and outside the
+container (`AURAT-0073`): every deletion writes one object to the **erasure
+journal** bucket — `aura-erasure-journal` (development),
+`aura-erasure-journal-prod` (production) — holding the account's `userId`,
+when, and who asked. The `account erased` log line is not it: container logs
+are gone on every deploy, and `account_erasures` is inside the dump. The
+bucket's lifecycle rule removes entries after **45 days**, past the 30 days
+backups are kept.
 
-```bash
-node dist/account-erasure.js --user <userId>   # inside the BFF container, once per id
-```
+1. **Before** restoring, if the current database can still be read, write down
+   the `userId` of every `account_erasures` row with `"completedAt" IS NULL`,
+   however recent. An erasure is completed only once its journal entry is
+   written, so an incomplete one may be missing from the journal (R2 down), and
+   the youngest are the likeliest. An extra id costs nothing: `--user` answers
+   `was already erased`, or `no account with id …` for an account the dump
+   does not hold.
+2. Restore the dump.
+3. **Before letting traffic onto it**, inside the BFF container:
 
-It deletes again what the dump brought back, and queues the Firebase identity,
-the desk contact and the photograph again — each of those treats "already gone"
-as done. An id the restored database already shows as deleted answers
-"already erased".
+   ```bash
+   node dist/account-erasure.js --journal
+   node dist/account-erasure.js --user <userId>   # each id from step 1, if any
+   ```
+
+   `--journal` erases again every account the journal names that the dump
+   brought back, and queues the Firebase identity, the desk contact and the
+   photograph again — each of those treats "already gone" as done. It prints a
+   line per account (`erased`, `was already erased`, `not in this database`,
+   `refused: …`, `failed: …`) and a summary. A refusal — a paid session live in
+   the restored data — does not stop the run; it exits 1, and running it again
+   later skips what is done.
 
 ---
 
@@ -311,6 +329,7 @@ A **Source** is the GitHub connection — one, shared by every application.
 | Chatwoot account | 1 «Aura»: inbox `Aura (prod)` (#2), bot #2, `bff-prod@aura.internal`; owner + chatters | 2 «Aura Dev»: inbox `Aura` (#3), bot #3, `bff-dev@aura.internal`; owner only |
 | Postgres / Redis | own `aura-postgres`; `aura-redis`, `aura-chatwoot-redis` | own `aura-postgres`, `aura-redis` |
 | Avatar bucket | `aura-user-media-prod` | `aura-user-media` |
+| Erasure journal bucket (`AURAT-0073`) | `aura-erasure-journal-prod` | `aura-erasure-journal` |
 | Data | seeded catalogue; no users yet | test data, restored 2026-09-16 (below) |
 
 Isolation between them is Chatwoot's account boundary, checked with real
@@ -679,7 +698,7 @@ all; the services unescape them.
 
 ### R2 tokens: one per bucket, verified
 
-All four buckets live in one Cloudflare account, each reached by its own
+All buckets live in one Cloudflare account, each reached by its own
 **Account** token scoped to that bucket alone. Verified 2026-09-14 by having
 every in-use key list every bucket:
 
@@ -689,6 +708,8 @@ every in-use key list every bucket:
 | production BFF (`AVATAR_STORAGE_*`) | `aura-user-media-prod` only (checked 2026-09-14) |
 | Chatwoot (`CW_STORAGE_*`) | `aura-chatwoot` only |
 | Coolify backups (`r2-backups`) | `aura-backups` only |
+| development BFF (`ERASURE_JOURNAL_*`) | `aura-erasure-journal` only (`AURAT-0073`, step A) |
+| production BFF (`ERASURE_JOURNAL_*`) | `aura-erasure-journal-prod` only (`AURAT-0073`, step B) |
 
 `aura-assets` (public, `assets.aura-app.cc`) has **no** standing write token:
 the one-off `aura-assets-storage` was deleted that day, and no token scoped to
