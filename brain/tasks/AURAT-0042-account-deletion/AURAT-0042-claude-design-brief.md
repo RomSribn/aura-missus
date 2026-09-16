@@ -200,12 +200,15 @@ your name, phone number or anything else that identifies you.
 Push notification tokens — until you sign out, delete your account, or the
 token stops working.
 Server logs — kept in rotating files that are overwritten as new entries
-arrive; we do not archive them.
+arrive; we do not archive them. Logs do not record the content of your
+messages. The exception is when a background task in our
+customer-conversation tool fails: its log entry may include your phone number
+and part of a message until the log is overwritten.
 Delivery queues — messages and notifications on their way between the app,
-our advisor team and your device pass through queues on our servers. The
-queues keep a limited number of recent entries, which newer entries replace;
-they are not included in backups and are not cleared when you delete your
-account.
+our advisor team and your device pass through queues on our servers. An entry
+is deleted within 25 hours after it is delivered, or within 8 days if
+delivery fails. This also applies to entries still in a queue when you delete
+your account. Queues are not included in backups.
 Backups — our databases are backed up daily and each backup is kept for up to
 30 days, so deleted data disappears from backups within 30 days. If we ever
 have to restore a backup, we repeat the deletions made after it was taken.
@@ -488,8 +491,10 @@ Kept:
   and text removed;
 - technical audit entries in our customer-conversation tool about
   conversation settings, which contain no message text;
-- recent entries in the queues that carry messages and notifications through
-  our servers, until newer entries replace them;
+- entries still in the queues that carry messages and notifications through
+  our servers, for up to 25 hours, or up to 8 days for a delivery that failed;
+- server log entries from background tasks that failed, which may include
+  your phone number and part of a message, until the logs are overwritten;
 - a record that the account was deleted and when, without your name, phone
   number or contact details, so that the deletion can be repeated if a backup
   is ever restored;
@@ -515,10 +520,17 @@ More about how we handle data: Privacy Policy (/privacy/).
    - `aura-bff`: **`AURAT-0073`** — журнал удалений вне базы. Без него фраза
      §07 «we repeat the deletions made after it was taken» ни на что не
      опирается;
-   - `aura-bff`: **`AURAT-0074`** — `LOG_LEVEL: warn` у Chatwoot и FCM-токен
-     вне лога BFF. Без него в логах стойки тексты сообщений и телефоны, а §02
-     и §07 называют логи техническими. До Chatwoot доходит только релизом в
-     `main`;
+   - `aura-bff`: **`AURAT-0074`**. Без неё неверны строки §07 «Server logs»
+     и «Delivery queues» и два пункта «Kept». В задачу входят:
+     - `LOG_LEVEL: warn` у Chatwoot — доходит только релизом в `main`;
+     - FCM-токен и имя файла вложения больше не пишутся в лог BFF;
+     - сроки в очередях BFF: выполненные записи хранятся сутки, упавшие
+       7 дней, ежечасная чистка — граница «+1 час»;
+     - **Scheduled Task в Coolify** на контейнере `sidekiq` Chatwoot:
+       ежедневно удаляет мёртвые задачи старше 7 дней — граница «+1 сутки».
+       От релиза не зависит, включается в панели.
+
+     Отсюда в тексте 25 часов и 8 дней;
    - `aura-app` в Play: экран удаления, строка 18+ на входе, выключенное по
      умолчанию согласие на маркетинг (`105` часть A) — сборка `20`, пока
      internal testing.
@@ -528,12 +540,12 @@ More about how we handle data: Privacy Policy (/privacy/).
 
    | Проверка | Ответ | Чем закрыто |
    |---|---|---|
-   | Логи Chatwoot с текстами и телефонами | да | продукт: `AURAT-0074`; текст не меняется |
+   | Логи Chatwoot с текстами и телефонами | да | продукт: `AURAT-0074` (`LOG_LEVEL: warn`). Остаток — Sidekiq пишет аргументы упавшей задачи на WARN, реальный путь — сбой после удаления аккаунта. Описан текстом в §07 «Server logs» и в «Kept» |
    | Traefik пишет access log | нет | — |
    | Письма Resend операторам цитируют текст | да (назначение, создание, упоминание) | продукт: письма выключены у всех операторов 2026-09-16; §05 не меняется |
    | Перевод или AI в Chatwoot | получателя нет | продукт: флаг `captain_tasks` выключен; §05–06 не меняются |
    | `avatar_url` контакта открывается без входа | да, как и вложения | текст: §09 — ссылки стойки работают без входа, видны только команде |
-   | Redis на диске и в бэкапе | на диске да, в бэкапе нет | текст: §07 «Delivery queues» и «Kept» на странице удаления |
+   | Redis на диске и в бэкапе | на диске да, в бэкапе нет; без срока | продукт: сроки в `AURAT-0074` (BFF — сутки / 7 дней + 1 ч; dead set Chatwoot — 7 дней + 1 сутки); текст: §07 «Delivery queues» и «Kept» |
 
    Сверх списка: журнал удалений (`AURAT-0073`) — отсюда пункт «a record that
    the account was deleted» в «Kept».
@@ -543,7 +555,10 @@ More about how we handle data: Privacy Policy (/privacy/).
      при добавлении (`AURAS-0004`, «Adding a colleague»);
    - ключ OpenAI или интеграцию (перевод, Dialogflow и т. п.) не добавлять,
      не дописав получателя в §05 и §06;
-   - `LOG_LEVEL` в compose не поднимать обратно до `info`.
+   - `LOG_LEVEL` в compose не поднимать обратно до `info`;
+   - Scheduled Task чистки dead set Chatwoot не выключать и не удалять при
+     пересоздании ресурса. Сроки `age` в очередях BFF не увеличивать, не
+     поправив «25 hours» и «8 days».
 
 5. **Дата.** `[PUBLICATION DATE]` → дата, трижды.
 6. **После сборки в Claude Design** — пройти глазами: ни одного App Store,
@@ -563,22 +578,10 @@ More about how we handle data: Privacy Policy (/privacy/).
   любой номер, который назовут. Если для Play выбрать вариант B (страница
   с входом по SMS), §02 страницы удаления переписывается под вход на странице
   — до сборки в Claude Design.
-- **Очереди держат записи без срока.** Только по счёту:
-  - BFF: `removeOnComplete` 1 000 и `removeOnFail` 5 000 на очередь. В
-    очереди вебхука лежит текст ответа оператора, в повторах пушей — токены
-    устройств;
-  - Chatwoot: упавшие задачи до 180 дней или 10 000 штук, в аргументах
-    телефоны и тексты. На 16.09 таких задач 0.
-
-  **Решено 2026-09-16: срок вводится в `AURAT-0074`** — после неё строку ниже
-  заменить на срок.
-
-  При малом трафике «newer entries replace» — это недели и месяцы, и
-  удаление аккаунта очереди не чистит. Отсюда честная строка в §07 и в
-  «Kept». Правка продукта — срок жизни записей в очередях BFF (`age` рядом
-  с `count`), например сутки для выполненных. Если её сделать, в §07
-  заменить «which newer entries replace; … are not cleared when you delete
-  your account» на срок, а пункт в «Kept» — на «… for up to <срок>».
+- **Остаток в логах Chatwoot.** Когда фоновая задача падает, Sidekiq на WARN
+  пишет её аргументы: там могут быть телефон и данные сообщения
+  (`AURAT-0074` Q1, принято). Сказано в §07 и в «Kept». Закрыть можно своим
+  initializer в образе Chatwoot — отдельной задачей, если захочется.
 - **Лендинг `/`** не входит в бриф, но на нём бейдж «Download on the App
   Store» и **нет ссылки на Google Play** (`Get the app` ведёт на `/#get`).
   §12 privacy теперь говорит «sends you to Google Play» — лендинг стоит
@@ -639,9 +642,9 @@ More about how we handle data: Privacy Policy (/privacy/).
 | IP и User-Agent в логах сервера, ротация по объёму | `app.module.ts:32-39`, `fastify.options.ts:14-33`; `AURAS-0004` (3×10 МБ) |
 | Hetzner (Хельсинки), R2 в EU, Resend EU, Netlify | `AURAS-0004` |
 | Бэкапы ежедневно, до 30 дней; повтор стираний после восстановления | `AURAS-0004`; `008` D4; опора — `AURAT-0073` |
-| Логи серверов без текстов, телефонов и токенов | `115` п. 1 и находка 2; `AURAT-0074` |
+| Логи без текстов, кроме упавших задач Chatwoot | `115` п. 1 и находка 2; `AURAT-0074` (`006` Q1, Q2); Sidekiq 7.3.1 `config.rb:43-50` |
 | Ссылки стойки на вложения и фото работают без входа, устройству не уходят | `AURAD-0011`; `115` п. 5 |
-| Очереди: ограниченное число записей, не в бэкапе, удаление не чистит | `jobs/queues.ts` (`removeOnComplete`/`removeOnFail`), Sidekiq `dead_timeout` 180 дней / 10 000 на проде; `115` п. 6 |
+| Очереди: 25 часов после доставки, 8 дней при сбое, не в бэкапе | `AURAT-0074` `007`/`008` Q3–Q5: `age` сутки / 7 дней и ежечасная `clean()` в BFF; ежедневная Scheduled Task на dead set Chatwoot; `115` п. 6 |
 | Запись об удалении без имени и телефона | `schema.prisma` `AccountErasure` (хэндлы чистятся по завершении); `AURAT-0073` |
 | Resend не получает текстов; AI-получателя нет | `115` п. 3–4, настройки выключены 2026-09-16 |
 | Что удаляется и что остаётся | `008` §1–2, `009` (Q1–Q4) |
