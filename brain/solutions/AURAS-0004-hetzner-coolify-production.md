@@ -616,6 +616,16 @@ a sequel.
   Adding a colleague: **Settings → Agents → Add Agent**, role **Agent** — not
   Administrator, since administrators can configure webhooks. An agent must also
   be **added to the inbox explicitly**, or they cannot reply in it.
+  **Then turn off the quoting emails for them.** Chatwoot gives every new
+  account member `email_conversation_assignment` by default
+  (`AccountUser#create_notification_setting`). That email, and the
+  `…_creation` and `…_mention` ones, quote the latest messages, which makes
+  Resend a recipient of message texts. On 2026-09-16 all three were switched off
+  for every operator in both accounts (`AURAT-0042-115`). The
+  `…_new_message` emails carry no text and may stay. The operator can re-enable
+  them under Profile → Notifications, so tell them not to. The same day
+  `captain_tasks` was disabled on both accounts: with no OpenAI key it does
+  nothing, but a key added later would send texts to OpenAI.
 
 ---
 
