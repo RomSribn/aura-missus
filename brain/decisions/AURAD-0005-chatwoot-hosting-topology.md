@@ -1,7 +1,9 @@
 # AURAD-0005 — Self-host Chatwoot (CE) in the EU; one account, one API inbox per environment
 
 Date: 2026-07-09
-Status: accepted (owner-ratified 2026-07-09)
+Status: accepted (owner-ratified 2026-07-09). The topology "one account, one
+inbox per environment" is **superseded by `AURAD-0016`** (2026-09-16: one
+installation, one account per environment); the rest stands.
 
 ## Decision
 
