@@ -513,9 +513,9 @@ More about how we handle data: Privacy Policy (/privacy/).
 
 1. **Почта — Spacemail (Spaceship), решение 2026-09-17.** Без неё страница
    удаления — тупик (`106` #9).
-   - **Ящик `support@aura-app.cc`.** Spacemail отправляет только с основного
-     адреса, а `support@` — тот, на который пишут чаще всего (Terms, Play).
-     Ответы на запросы по `privacy@` тоже уйдут с `support@`.
+   - **Ящик `support@aura-app.cc`** — на него пишут чаще всего (Terms, Play).
+     Spacemail умеет отправлять и с алиасов: на запросы по `privacy@`
+     отвечать с `privacy@`.
    - **Алиасы:**
      - `privacy@`;
      - `info@` — стоит на опубликованных сейчас страницах;
@@ -523,8 +523,9 @@ More about how we handle data: Privacy Policy (/privacy/).
      - по желанию `dmarc@`.
    - **Логины сервисов** (Cloudflare, Hetzner, Play, Resend) на `support@` не
      переносить. Этот адрес публичный, а позже его может читать поддержка.
-   - **DNS домена — в Cloudflare**, поэтому записи из панели Spacemail
-     вносятся вручную: MX, SPF на корень, DKIM, одна запись DMARC (для начала
+   - **DNS домена — в Cloudflare** (NS `jasper`/`rayne.ns.cloudflare.com`;
+     Spaceship только регистратор, его DNS-зона не используется), поэтому
+     записи из панели Spacemail вносятся вручную: MX, SPF на корень, DKIM, одна запись DMARC (для начала
      `p=none`). Корень сейчас пуст. У Resend свой SPF и MX на
      `send.aura-app.cc` — их не трогать. **Cloudflare Email Routing не
      включать**: он перепишет MX.
