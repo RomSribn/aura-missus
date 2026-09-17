@@ -927,17 +927,12 @@ users' conversations.
 - **The restore drill needs repeating** against populated databases. The
   2026-09-16 moves restored real data (row counts per table and wallet balances
   against the ledger matched), but the append-only trigger was not made to fire.
-- **Chatwoot logs at `warn`: a message from the app is the one check left**
-  (`AURAT-0074`). Released to `main` 2026-09-17 (`abe2039`); already confirmed:
-  - both containers booted with `LOG_LEVEL=warn`;
-  - `rails runner 'Rails.logger.warn("probe-warn"); Rails.logger.info("probe-info")'`
-    prints only `probe-warn`;
-  - neither log has a `Started`, `Parameters:`, `with arguments` or `INFO` line,
-    or anything shaped like a phone number, while the BFF polls the API.
-
-  After the next message from the app, check that neither log gained
-  `Parameters:` or `with arguments`. The dead-set Scheduled Task needs nothing
-  more (*Chatwoot specifics*).
-- **Production end to end.** Its BFF, Chatwoot account and webhook are checked
-  piece by piece, but no build pointed at `bff.aura-app.cc` has yet sent a message
-  and received a chatter's reply, and `aab:prod` does not exist.
+- ~~Chatwoot logs at `warn`~~ and ~~production end to end~~ — **proven
+  2026-09-17** (`AURAT-0076-002`):
+  - the Play-installed prod build 21 (`npm run aab:prod`) signed in, messaged, got
+    a chatter's reply and a push, bought two test top-ups, ran a 10-minute session
+    and deleted the account;
+  - erasure completed in both passes and wrote the prod journal;
+  - neither Chatwoot log gained `Parameters:`, `with arguments`, `INFO` or a phone
+    number;
+  - the BFF logged no warning.
