@@ -153,12 +153,15 @@ cards and are never charged. They must also be on the internal-testing track
 and install **from Play** — a sideloaded build cannot transact, and that alone
 accounts for most "it doesn't work" reports.
 
-**Testers need Spanish phone numbers.** Phone-OTP is the app's only sign-in and
-the Firebase project allows it from exactly one country — `["ES"]`, verified
-live 2026-08-18. A tester elsewhere cannot create an account, so they cannot
-reach the Top Up sheet at all, and the failure looks like "the SMS never
-arrives" rather than anything to do with Play. Recorded as item 1 of the app's
-`TECH-DEBT.md`; widening it is a Firebase Console change plus a cost decision.
+**Testers need a phone number from an allowed country.** Phone-OTP is the app's
+only sign-in, and Firebase sends SMS only to the regions in
+`smsRegionConfig.allowlistOnly`. It was `["ES"]` (verified 2026-08-18), then
+`["ES", "UA"]`. **Since 2026-09-17 it holds 34 regions**, the same as the Play
+production countries: EU-27, IS, LI, NO, GB, CH, UA, US (`AURAT-0076`).
+A tester elsewhere cannot create an account, so they cannot reach the Top Up
+sheet at all. The failure looks like "the SMS never arrives" rather than
+anything to do with Play. Keep the allowlist and the Play countries equal. The
+list is also the only SMS spend control (`TECH-DEBT.md` #1).
 
 **The uploaded build must have the rollout flags on, or there is nothing to
 transact with**: with them off no wallet or Top Up UI mounts at all. Since
