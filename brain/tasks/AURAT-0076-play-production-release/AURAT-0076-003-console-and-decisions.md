@@ -74,5 +74,24 @@ Identity Toolkit Admin API (`projects.config`, `updateMask=smsRegionConfig`),
 - `aura-app` `TECH-DEBT.md` #1 устарел: там `["ES","UA"]`. Поправить
   отдельным коммитом в `develop`.
 - **Трата на SMS теперь ограничена только этим списком.** Лимиты Google Cloud
-  трату не останавливают, App Check нет. Бюджетное оповещение в Google Cloud
-  Billing — задача владельца.
+  трату не останавливают, App Check нет.
+
+## Бюджет с оповещениями (манор, по просьбе владельца, 2026-09-17)
+
+Создан через `gcloud` на Mac (аккаунт `roma.sribnyi@gmail.com`). На
+`aura-2781b` включён `billingbudgets.googleapis.com`.
+
+| Поле | Значение |
+|---|---|
+| Бюджет | `aura-2781b monthly (SMS guard)`, id `fc01634b-5e64-47c1-9471-2446f3f35f69` |
+| Платёжный аккаунт | `01E3AB-F2A605-F44DED` (USD) |
+| Сумма / период | $25 в месяц, только проект `aura-2781b` |
+| Кредиты | `EXCLUDE_ALL_CREDITS`: пробные $300 (до ~2026-11-26) не прячут реальную трату |
+| Пороги | 50%, 90%, 100% фактической траты; 100% прогноза |
+| Получатели | стандартные — администраторы платёжного аккаунта по email |
+
+**Бюджет только оповещает, трату не останавливает.** Если придёт письмо о
+всплеске: Firebase → Authentication → Usage (SMS по странам), затем сузить
+allowlist через `smsRegionConfig`.
+
+Посмотреть: `gcloud billing budgets list --billing-account=01E3AB-F2A605-F44DED`.
