@@ -517,6 +517,10 @@ More about how we handle data: Privacy Policy (/privacy/).
 2. **Что должно быть в проде** — текст описывает именно это:
    - `aura-bff`: `AURAT-0042` (удаление) и `AURAT-0072` (имя на контакте
      Chatwoot) — **в проде** с 2026-09-16 (`main` = `781957a`);
+   - **`AURAT-0073` и `AURAT-0074` — в проде с 2026-09-17** (`main` =
+     `abe2039`): прод-бакет журнала с правилом 45 дней, токен и переменные
+     проверены; `LOG_LEVEL=warn` у Chatwoot; Scheduled Task dead set работает.
+     Ниже — что каждая из них держит в тексте;
    - `aura-bff`: **`AURAT-0073`** — журнал удалений вне базы. Без него фраза
      §07 «we repeat the deletions made after it was taken» ни на что не
      опирается;

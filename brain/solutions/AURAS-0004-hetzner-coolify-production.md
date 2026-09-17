@@ -289,9 +289,18 @@ Three things to know:
   Editing the compose in the repo *is* deploying it. Until 2026-09-14 Chatwoot
   tracked `develop`, so every feature merge restarted the chat; it no longer does.
 - **There is no gate.** A push with a bad migration reaches whatever environment tracks that branch.
-- **Rolling updates**: the new container starts while the old one serves. An
-  additive migration survives that window; a destructive one does not. Use
-  expand/contract when the first destructive migration appears.
+- **Rolling updates do not wait for the new container to be healthy.** There
+  is no healthcheck, so Coolify removes the old container under a second after
+  the new one *starts*, not after it answers (`AURAT-0073-013`).
+  - **A new container that dies at boot leaves the environment with no BFF.**
+    The env schema refuses a missing required variable, so **add every new
+    required variable before the release**. `development` went down exactly
+    this way on 2026-09-16.
+  - **Even a good release shows a gap.** On the 2026-09-17 release (`abe2039`)
+    the BFF answered `502` for about 4 s while the migration ran and Nest
+    booted.
+  - An additive migration survives the overlap; a destructive one does not. Use
+    expand/contract when the first destructive migration appears.
 
 ### Three traps this platform sets
 
@@ -888,15 +897,17 @@ users' conversations.
 - **The restore drill needs repeating** against populated databases. The
   2026-09-16 moves restored real data (row counts per table and wallet balances
   against the ledger matched), but the append-only trigger was not made to fire.
-- **Chatwoot logs at `warn` and the dead-set task** (`AURAT-0074`, written
-  2026-09-16). `LOG_LEVEL: warn` is in the compose on `develop` and reaches
-  Chatwoot only with the next release to `main`; after it, check that both
-  containers booted, that a message sent from the app leaves no `Parameters:` or
-  `with arguments` in either log, and that
-  `rails runner 'Rails.logger.warn("probe-warn"); Rails.logger.info("probe-info")'`
-  prints only `probe-warn`. The dead-set Scheduled Task needs nothing more: its
-  scheduled run and an actual deletion were both proven on 2026-09-17
-  (*Chatwoot specifics*).
+- **Chatwoot logs at `warn`: a message from the app is the one check left**
+  (`AURAT-0074`). Released to `main` 2026-09-17 (`abe2039`); already confirmed:
+  - both containers booted with `LOG_LEVEL=warn`;
+  - `rails runner 'Rails.logger.warn("probe-warn"); Rails.logger.info("probe-info")'`
+    prints only `probe-warn`;
+  - neither log has a `Started`, `Parameters:`, `with arguments` or `INFO` line,
+    or anything shaped like a phone number, while the BFF polls the API.
+
+  After the next message from the app, check that neither log gained
+  `Parameters:` or `with arguments`. The dead-set Scheduled Task needs nothing
+  more (*Chatwoot specifics*).
 - **Production end to end.** Its BFF, Chatwoot account and webhook are checked
   piece by piece, but no build pointed at `bff.aura-app.cc` has yet sent a message
   and received a chatter's reply, and `aab:prod` does not exist.
