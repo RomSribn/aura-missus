@@ -548,13 +548,37 @@ A copy taken 2026-08-27 — both pages, full text — is kept in
 `AURAT-0040-009-published-text-recovered.md`, so there is at least one version
 under version control to diff the next one against.
 
-### The domain has no mail, and both pages publish an address
+### Mail for the domain: Spacemail, DNS in Cloudflare (2026-09-17)
 
-`MX` is empty, `TXT`/SPF are empty, and `mail`/`smtp`/`mx` do not resolve —
-checked against the zone's authoritative nameservers. Meanwhile the live pages
-print **two** addresses: `info@aura-app.cc` (privacy, and the address its §08
-undertakes to answer a GDPR request on "within one month") and
-`support@aura-app.cc` (terms and the root). Neither can receive anything.
+Until 2026-09-17 the domain had no mail at all, while the live pages print
+`info@aura-app.cc` and `support@aura-app.cc`. Now:
+- **Mailbox:** `support@aura-app.cc` at Spacemail (Spaceship). Aliases
+  `privacy@` and `info@` can send as well as receive.
+- **Spaceship is only the registrar.** The nameservers are Cloudflare's, so the
+  records Spaceship shows under *Inactive records* were copied into Cloudflare
+  by hand.
+- **Never press *Change nameservers* there.** Every host above would move with
+  them.
+- **The Spaceship *Default record group*** (A `@` 75.2.60.5, CNAME `www`) is
+  parking and was **not** copied: Cloudflare's root and `www` already point at
+  Netlify.
+
+| Type | Name | Value |
+|---|---|---|
+| MX | `@` | `mx1.spacemail.com`, `mx2.spacemail.com`, priority 0 |
+| TXT | `@` | `v=spf1 include:spf.spacemail.com ~all` — the only SPF on the root |
+| TXT | `spacemail._domainkey` | Spacemail's key, RSA 2048 (checked: decodes) |
+| SRV | `_autodiscover._tcp` | `0 0 443 autoconfig.spacemail.com` |
+| TXT | `_dmarc` | `v=DMARC1; p=none` |
+
+Checked against `jasper.ns.cloudflare.com`. Resend's records on
+`send.aura-app.cc` and `resend._domainkey` were left untouched: a subdomain does
+not collide with the root.
+
+**Port 25 does not work for a check.** It is closed outbound both from the host
+(Hetzner) and from the manor's network. Delivery is proven by a message from an
+outside address, and the `Authentication-Results` header of a reply shows SPF,
+DKIM and DMARC.
 
 ### If this is ever moved
 
