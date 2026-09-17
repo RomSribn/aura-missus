@@ -580,6 +580,12 @@ not collide with the root.
 outside address, and the `Authentication-Results` header of a reply shows SPF,
 DKIM and DMARC.
 
+**Inbound proven 2026-09-17.** Messages from Gmail to `support@`, `privacy@` and
+`info@` all arrived. The mailbox address came at once; the just-created aliases
+took several minutes, with no bounce. So an alias that seems silent right after
+it is created is waiting, not broken. **Outbound from an alias**
+(`Authentication-Results` of a reply) is not yet checked.
+
 ### If this is ever moved
 
 Put the source in `RomSribn/aura-bff` and deploy it the way everything else
