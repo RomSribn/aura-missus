@@ -1,6 +1,6 @@
 # AURAS-0004 — Production: Hetzner + Coolify, and how to operate it
 
-Date: 2026-08-19 · updated 2026-09-16
+Date: 2026-08-19 · updated 2026-09-17
 Status: **running — two environments on one host: `production` (created
 2026-09-14 … 16, no real users yet) and `development` (test data).** This is the
 document to follow; `AURAS-0003` (AWS) is on hold and describes infrastructure
@@ -67,6 +67,25 @@ Ports **22, 80, 443** only, at Hetzner's cloud firewall — not `ufw`, because
 Docker writes its own iptables rules and bypasses it. Postgres and Redis publish
 no host port at all, and 8000/6001/6002 were closed once the panel moved behind
 TLS.
+
+Besides the device API, each BFF host serves **the backoffice** at
+`/backoffice` (`AURAT-0075`, in production since 2026-09-17): the review
+moderation queue and the account-deletion report. It is signed in with a login
+and password and has **no sign-up**. An operator exists only because somebody
+ran this in the terminal of that environment's `aura-bff` container:
+
+```bash
+node dist/backoffice-operators.js add <login>      # prints a generated password, once
+node dist/backoffice-operators.js reset <login>    # new password; its sessions end
+node dist/backoffice-operators.js remove <login>   # its sessions end
+node dist/backoffice-operators.js list
+```
+
+Operators are per environment: rows in that environment's `aura_bff`
+(`backoffice_operators`, scrypt hashes). Sessions are in its Redis for 12 hours.
+Ten failed sign-ins from one address make it wait 15 minutes. It is not in
+Swagger and not behind the Firebase guard, and nothing about it is configured in
+Coolify.
 
 ---
 
@@ -241,7 +260,8 @@ runtime-only before any deploy.
 
 1. **Before** restoring, if the current database can still be read, write down
    the `userId` of every `account_erasures` row with `"completedAt" IS NULL`,
-   however recent. An erasure is completed only once its journal entry is
+   however recent — the backoffice lists exactly these under
+   *Удаления → Не завершённые*. An erasure is completed only once its journal entry is
    written, so an incomplete one may be missing from the journal (R2 down), and
    the youngest are the likeliest. An extra id costs nothing: `--user` answers
    `was already erased`, or `no account with id …` for an account the dump
@@ -261,6 +281,10 @@ runtime-only before any deploy.
    `refused: …`, `failed: …`) and a summary. A refusal — a paid session live in
    the restored data — does not stop the run; it exits 1, and running it again
    later skips what is done.
+4. **Backoffice operators come back as the dump had them** (`AURAT-0075`). An
+   operator removed after the backup was taken can sign in again, and a
+   password reset since then is undone. Run `node dist/backoffice-operators.js
+   list`, then `remove` or `reset` whatever changed after the backup.
 
 ---
 
@@ -879,6 +903,8 @@ users' conversations.
 | A service token gets `401 You are not authorized to access this account` | Expected across environments: each service User belongs to one account only. Within its own environment, check `CHATWOOT_ACCOUNT_ID` |
 | "Conversation was marked open by system due to an error with the agent bot" | The agent bot's webhook failed. It should not be running at all — check `AgentBotInbox.status` is `inactive` |
 | Chatters see nothing under "Open" while users are writing | An agent bot is active on the inbox, so conversations are born `pending`. Deactivate the link, then open the stranded ones |
+| Backoffice sign-in says to try again in N minutes | Ten failed sign-ins from that address in 15 minutes. It clears by itself; a lost password is `node dist/backoffice-operators.js reset <login>` in the container, not a wait (`AURAT-0075`) |
+| Backoffice form answers 403 "not sent from the backoffice" | The POST carried neither `Sec-Fetch-Site: same-origin` nor an `Origin` matching the host — a form posted from another site, or a proxy that rewrote `Host`. Nothing was done |
 | App gets 429s under light load | `trustProxy` regression — every device sharing one rate-limit budget |
 | Wallet routes answer 404 | `BILLING_ENABLED` is false. 401 is the healthy answer |
 | Purchase charged but not credited | Play financial permission — probe as above |
