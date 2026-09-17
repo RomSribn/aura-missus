@@ -228,6 +228,17 @@ are gone on every deploy, and `account_erasures` is inside the dump. The
 bucket's lifecycle rule removes entries after **45 days**, past the 30 days
 backups are kept.
 
+Production was checked on 2026-09-17, before the first release that needs it:
+- the token reads, writes and deletes in `aura-erasure-journal-prod`;
+- it gets `AccessDenied` on the development bucket, and the development token
+  gets `AccessDenied` on this one;
+- a new object carries `Expiration … rule-id="expire-45d"`.
+
+The rule was missing at first: a new bucket has none. **The header on a fresh
+object is the proof, because an object-scoped token cannot read the lifecycle
+configuration.** The four variables arrived flagged build-time and were set to
+runtime-only before any deploy.
+
 1. **Before** restoring, if the current database can still be read, write down
    the `userId` of every `account_erasures` row with `"completedAt" IS NULL`,
    however recent. An erasure is completed only once its journal entry is
@@ -696,6 +707,16 @@ a sequel.
   instance has no API token; it shows under the application's *Scheduled Tasks*
   like any other. Its executions (status and output) are on the task's page, or
   `ScheduledTask::where('uuid', '1dr8c4gpajt6v9bbruriw3pk')->first()->executions`.
+
+  **Deletion proven 2026-09-17.** The first scheduled run (03:30 UTC) succeeded.
+  To see it actually delete, two fake entries went into the dead set:
+  - `AuraProbe::DeadSetRetention`, 8 days old;
+  - the same, stamped now.
+
+  Then the command went through `ScheduledTaskJob` once more. Result: the old
+  entry was gone, the fresh one stayed, and both probes were removed afterwards.
+  **There is exactly one such task.** A duplicate made that morning without
+  looking at the list was deleted. Check *Scheduled Tasks* before adding one.
 - **Mail via Resend** — free tier, EU region, domain verified, an actual message
   delivered. Without it Chatwoot cannot invite an agent, reset a password, or
   tell an operator a conversation is waiting, and all three fail silently.
@@ -873,9 +894,9 @@ users' conversations.
   containers booted, that a message sent from the app leaves no `Parameters:` or
   `with arguments` in either log, and that
   `rails runner 'Rails.logger.warn("probe-warn"); Rails.logger.info("probe-info")'`
-  prints only `probe-warn`. The dead-set Scheduled Task is created and has run
-  once on demand (*Chatwoot specifics*); its first **scheduled** run is
-  2026-09-17 03:30 UTC.
+  prints only `probe-warn`. The dead-set Scheduled Task needs nothing more: its
+  scheduled run and an actual deletion were both proven on 2026-09-17
+  (*Chatwoot specifics*).
 - **Production end to end.** Its BFF, Chatwoot account and webhook are checked
   piece by piece, but no build pointed at `bff.aura-app.cc` has yet sent a message
   and received a chatter's reply, and `aab:prod` does not exist.
