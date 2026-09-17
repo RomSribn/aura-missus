@@ -511,8 +511,10 @@ More about how we handle data: Privacy Policy (/privacy/).
 
 ## До публикации — по порядку
 
-1. **Почта — Spacemail (Spaceship), решение 2026-09-17.** Без неё страница
-   удаления — тупик (`106` #9).
+1. **Почта — Spacemail (Spaceship), решение 2026-09-17. Сделано и проверено
+   17.09:** письма с чужого адреса на `support@`, `privacy@`, `info@` доходят;
+   ответ с `privacy@` — SPF, DKIM, DMARC `PASS` (`AURAS-0004`). Без почты
+   страница удаления была бы тупиком (`106` #9).
    - **Ящик `support@aura-app.cc`** — на него пишут чаще всего (Terms, Play).
      Spacemail умеет отправлять и с алиасов: на запросы по `privacy@`
      отвечать с `privacy@`.

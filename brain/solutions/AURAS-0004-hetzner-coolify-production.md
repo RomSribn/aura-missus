@@ -583,8 +583,8 @@ DKIM and DMARC.
 **Inbound proven 2026-09-17.** Messages from Gmail to `support@`, `privacy@` and
 `info@` all arrived. The mailbox address came at once; the just-created aliases
 took several minutes, with no bounce. So an alias that seems silent right after
-it is created is waiting, not broken. **Outbound from an alias**
-(`Authentication-Results` of a reply) is not yet checked.
+it is created is waiting, not broken. **Outbound proven the same day:** a reply
+sent from `privacy@` arrived in Gmail with SPF, DKIM and DMARC all `PASS`.
 
 ### If this is ever moved
 
