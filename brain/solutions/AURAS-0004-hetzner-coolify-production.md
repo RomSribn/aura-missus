@@ -33,6 +33,40 @@ Same specification in Hetzner's **Ashburn** location priced at **$88.92**. The
 seven-fold difference is the location, not the hardware — and choosing Helsinki
 also keeps `AURAD-0005`'s EU requirement intact, so no amendment was needed.
 
+### What the whole thing costs (2026-09-18)
+
+| Recurring | Per month | Note |
+|---|---|---|
+| Hetzner CX33 | **$12.81** | the whole stack: BFF, Chatwoot, Postgres ×2, Redis ×3, Coolify |
+| Apple Developer Program | **$8.25** | $99 a year |
+| Spacemail Pro for `aura-app.cc` | **$0.98** | $11.76 a year |
+| Domain `aura-app.cc` | owner's figure | Spaceship, renewed yearly |
+| **Known total** | **≈ $22** | |
+
+Free at this size, with the limit that ends it: **R2** (10 GB stored, 1M class A
+and 10M class B operations a month — we hold tens of megabytes; egress is free),
+**Cloudflare DNS**, **Netlify** (100 GB/month), **Resend** (3 000 emails a
+month, 100 a day), **FCM**, and Chatwoot itself, which is self-hosted.
+
+Measured 2026-09-18: prod `aura_bff` 9 MB, `chatwoot` 19 MB, development
+`aura_bff` 9.5 MB; a day's backup of both prod databases is about 0.4 MB. Disk
+16 of 75 GB, 2 of 7 GB RAM.
+
+Variable, and the one that matters:
+
+| Variable | Price | Shape |
+|---|---|---|
+| **Phone-auth SMS** | ~$0.01 in US/CA, ~$0.05–0.06 in Europe, per message sent | 100 sign-ups ≈ $5–6; 1 000 ≈ $50–60. Retries count. The $300 trial credit runs to ~2026-11-26, so today's invoice reads zero — the budget alert deliberately excludes credits (`AURAT-0076-003`) |
+| **Google Play fee** | 15% of the first $1M/year | a $10 top-up nets $8.50 |
+| **Apple fee** | 15% under the Small Business Program (must be applied for), else 30% | no iOS payments exist yet |
+| **R2 above the free tier** | $0.015 per GB-month | only when attachments and photographs pass ~10 GB |
+
+One-offs: Google Play developer $25 (paid), Apple $99 (yearly, ordered
+2026-09-18).
+
+**SMS is the only cost that scales with people who never pay**, which is why the
+region allowlist (`TECH-DEBT.md` #1) doubles as the spend control.
+
 ### Services
 
 Coolify project **`aura`**, two environments:
