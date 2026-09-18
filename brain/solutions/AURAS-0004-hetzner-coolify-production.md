@@ -40,8 +40,8 @@ also keeps `AURAD-0005`'s EU requirement intact, so no amendment was needed.
 | Hetzner CX33 | **$12.81** | the whole stack: BFF, Chatwoot, Postgres ×2, Redis ×3, Coolify |
 | Apple Developer Program | **$8.25** | $99 a year |
 | Spacemail Pro for `aura-app.cc` | **$0.98** | $11.76 a year |
-| Domain `aura-app.cc` | owner's figure | Spaceship, renewed yearly |
-| **Known total** | **≈ $22** | |
+| Domain `aura-app.cc` | **$0.69** | $8.26 a year at Spaceship |
+| **Total** | **$22.73** | |
 
 Free at this size, with the limit that ends it: **R2** (10 GB stored, 1M class A
 and 10M class B operations a month — we hold tens of megabytes; egress is free),
