@@ -219,11 +219,159 @@ is far above anything this rail will produce.
 
 ### 8. Refund notifications
 
-Create a Pub/Sub topic, set it as the app's **Real-time developer
-notifications** endpoint, and give the service account publish rights. The BFF
-subscribes and writes a compensating negative ledger entry on
-`ONE_TIME_PRODUCT_CANCELED`. The Voided Purchases API is the periodic sweep
-for anything a lost notification missed.
+**Rewritten 2026-09-18 (`AURAT-0077`), and the correction is worth keeping.**
+This step used to read as a hard prerequisite for any refund handling at all,
+and on that reading the work sat unbuilt from August to September. It is not a
+prerequisite: the **Voided Purchases API** closes the rail on its own, using the
+same OAuth scope, the same service account and the *View financial data*
+permission step 7 already granted on 2026-08-19.
+
+So the BFF has **two** ways of learning about a refund, and this step buys the
+fast one:
+
+| | |
+|---|---|
+| **RTDN push** (this step) | Seconds. The primary path |
+| **Voided Purchases sweep** | Hourly. The backstop, and it works with none of this step done |
+
+Both end in the same compensating entry, keyed the same way, so neither can
+debit twice. The sweep stays permanently — notification delivery is a best
+effort, and a reversal that never arrives is money we do not take back. This is
+the arrangement the Chatwoot webhook and its reconciliation poll already use
+(`AURAI-0002` §2.4).
+
+#### The Google Cloud half — **done 2026-09-18** (`AURAT-0077-010`)
+
+```bash
+# The Pub/Sub service agent is created lazily and does not exist until asked
+# for. Do this FIRST: the token-creator binding below fails with
+# "INVALID_ARGUMENT: ... does not exist" without it. `gcloud beta services
+# identity create` does the same thing but cannot run non-interactively (it
+# stops to install the beta component), hence the raw call.
+curl -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  https://serviceusage.googleapis.com/v1beta1/projects/aura-2781b/services/pubsub.googleapis.com:generateServiceIdentity
+
+gcloud pubsub topics create play-rtdn --project=aura-2781b
+
+# Google's own account, not ours. A missing publish right is the single most
+# common way RTDN looks configured and delivers nothing.
+gcloud pubsub topics add-iam-policy-binding play-rtdn \
+  --member="serviceAccount:google-play-developer-notifications@system.gserviceaccount.com" \
+  --role="roles/pubsub.publisher" --project=aura-2781b
+
+# Lets Pub/Sub mint the OIDC token the push subscription signs with.
+gcloud iam service-accounts add-iam-policy-binding \
+  play-billing-api@aura-2781b.iam.gserviceaccount.com \
+  --member="serviceAccount:service-1022442840784@gcp-sa-pubsub.iam.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountTokenCreator" --project=aura-2781b
+```
+
+Topic: **`projects/aura-2781b/topics/play-rtdn`**. Both bindings verified by
+reading the policies back.
+
+#### The Play Console half — **the owner's, and it has no API**
+
+Play Console → **Monetize → Monetization setup → Real-time developer
+notifications**: enable, paste `projects/aura-2781b/topics/play-rtdn`, choose
+the notification set that includes voided purchases, save, then press **Send
+Test Message**.
+
+That button is worth pressing on its own: it proves the publish right above,
+which is the thing that usually breaks. The BFF acknowledges a test notification
+and drops it.
+
+There is no public API for this screen — the Play Developer API covers
+purchases, orders and the listing, not monetization setup — so this step cannot
+be scripted.
+
+#### The subscriptions — **done 2026-09-18** (`AURAT-0077-012`)
+
+One RTDN topic serves the whole app, but a topic can carry several push
+subscriptions and each gets every message. So both environments subscribe, and
+each reacts only to its own purchases: a void for a token the environment never
+credited is a no-op by design, never a debit.
+
+Written out rather than looped on purpose: the loop this replaced used
+`set -- $pair`, which works in bash and **silently does not in zsh** — zsh does
+not word-split an unquoted parameter, so both subscription names came out as
+`play-rtdn-bff-dev bff-dev` and Pub/Sub refused them. The manor's shell is zsh.
+
+```bash
+gcloud pubsub subscriptions create play-rtdn-bff-dev \
+  --topic=play-rtdn \
+  --push-endpoint="https://bff-dev.aura-app.cc/webhooks/play" \
+  --push-auth-service-account=play-billing-api@aura-2781b.iam.gserviceaccount.com \
+  --push-auth-token-audience="https://bff-dev.aura-app.cc/webhooks/play" \
+  --project=aura-2781b
+
+gcloud pubsub subscriptions create play-rtdn-bff-prod \
+  --topic=play-rtdn \
+  --push-endpoint="https://bff.aura-app.cc/webhooks/play" \
+  --push-auth-service-account=play-billing-api@aura-2781b.iam.gserviceaccount.com \
+  --push-auth-token-audience="https://bff.aura-app.cc/webhooks/play" \
+  --project=aura-2781b
+```
+
+Then hand each environment the two values its route checks the token against —
+note that **the audience differs per environment**:
+
+| | `PLAY_RTDN_AUDIENCE` | `PLAY_RTDN_SERVICE_ACCOUNT_EMAIL` |
+|---|---|---|
+| dev | `https://bff-dev.aura-app.cc/webhooks/play` | `play-billing-api@aura-2781b.iam.gserviceaccount.com` |
+| prod | `https://bff.aura-app.cc/webhooks/play` | same |
+
+Created once the route was merged (`develop` @ `c546279`) and not before: a
+subscription pins its endpoint URL as both destination and audience, so a path
+that changed in review would have meant redoing the subscriptions and the
+environment variables with them.
+
+**Order of deployment matters from here on.** In production, and on any
+environment with `BILLING_ENABLED=true`, the service **refuses to boot** without
+both `PLAY_RTDN_*` values. So: subscriptions first, then the variables into the
+environment, then deploy. The other way round does not start.
+
+**Enabling RTDN in the console before the subscriptions exist is safe.** Pub/Sub
+drops messages published to a topic nobody subscribes to — and the hourly sweep
+reads the whole thirty-day window, so the first sweep after deployment picks up
+anything from that gap. That is what the sweep is for.
+
+In production with `BILLING_ENABLED=true` the service **refuses to boot**
+without those two. That is deliberate and mirrors step 7's refinement: the route
+reverses ledger entries, and an unverified one is a way to empty a wallet.
+
+#### The rule that is not about setup at all — **refund WITH revoke**
+
+Found 2026-09-18 the hard way (`AURAT-0077-015`). The Voided Purchases API
+documentation:
+
+> only revoked orders will be shown in the Voided Purchases API. If a developer
+> refunds a purchase without setting the revoke option, the order will not be
+> returned by the API.
+
+| Cause of the void | Does the BFF see it? |
+|---|---|
+| The user asked Google for a refund | **yes** |
+| The user cancelled the purchase | **yes** |
+| A chargeback by the payment processor | **yes** |
+| **A refund the owner or Google issued** | **only with revoke** |
+
+So the cases this rail exists for all work. But:
+
+> **A refund made by hand in Play Console without the revoke option is invisible
+> to the BFF — forever.** No notification, no sweep. The credits stay on the
+> wallet and nothing will ever reverse them.
+
+Whoever refunds a person's money must choose **Refund and revoke**. A plain
+Refund gives the money back and leaves the credits, which is the one outcome
+this whole task exists to prevent. Nothing in the code can detect it — Google
+simply never says it happened.
+
+#### Still the owner's, regardless
+
+**A test refund, with revoke.** Cancel a real purchase in Play Console — a
+licence tester's, or one of the owner's own. There is no way to fake a genuine
+void, so this is what proves the whole path.
+
 
 ### 9. Production
 
@@ -338,6 +486,8 @@ knowing before running it:
 
 Step 8 (RTDN) now gates a follow-up task rather than `AURAT-0027`: the refund
 subscriber was deliberately not built against a topic that does not exist.
+**Superseded 2026-09-18** — step 8 gates only the fast path; the sweep behind it
+needs nothing from it. See the step itself.
 
 ### Update 2026-08-18 — the AAB now has to name its backend (`AURAT-0028`)
 

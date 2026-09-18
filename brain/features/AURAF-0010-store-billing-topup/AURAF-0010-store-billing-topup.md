@@ -26,13 +26,13 @@ This is the **store** rail. `AURAF-0009` is the **card** rail, and per
 | AURAF-0010-003 | me | ✓ | ✓ | ✓ | — |  | Each tier shows the price Google will actually charge in the user's currency, not a hardcoded `$` |
 | AURAF-0010-004 | me | ✓ | ✓ | ✓ | ✓ |  | A purchase interrupted by a crash, a kill or a dead network is redeemed on the next launch instead of being lost |
 | AURAF-0010-005 | me | ✓ | ✓ | ✓ | — |  | A cancelled purchase is silent; a genuine failure says so and leaves the user's money with Google |
-| AURAF-0010-006 | me | — | ✗ | — | ✗ |  | A refunded or revoked purchase debits the wallet (negative entry; balance may go below zero) |
+| AURAF-0010-006 | me | ✓ | ✓ | — | ✓ |  | A refunded or revoked purchase debits the wallet (negative entry; balance may go below zero) |
 | AURAF-0010-007 | me | — | — | — | — |  | Play Console: app created, tiers published, internal-testing track, licence testers — owner runbook `AURAS-0002`. **Account approved and app created 2026-08-18** (organisation, `cc.silvermind.aura`); the remainder waits on the first upload |
 | AURAF-0010-008 | me | — | ✗ | ✗ | ✗ |  | The same rail on iOS via StoreKit — deferred until Apple's review clears |
 
 `App` = approved against the source of truth (`AURAD-0010`), `Own` = owner
 ratified. Rows 001–005 are `AURAT-0026` (app) + `AURAT-0027` (BFF); row 006 is
-**`AURAT-0030`**, not `AURAT-0027` — see below; row 007 is the owner; row 008 has no task.
+**`AURAT-0077`** (executing `AURAT-0030`) — see below; row 007 is the owner; row 008 has no task.
 
 Row 003's `BE` was corrected `✗ → —`: the localized price comes from
 `fetchProducts` against Play and the BFF has no part in it, so there was never
@@ -57,13 +57,39 @@ accommodates it: a refund is a new negative `ledger_entries` row, and
 `play_purchases` links a token to the credit it paid for, so the follow-up is
 one migration plus a processor.
 
-**Minted 2026-08-19 as `AURAT-0030`** (bff-play-refund-subscriber), executing in
-`aura-bff-manor`. Its brief names three things to settle before code: whether the
-subscription is *push* (a new public route that must verify Google's signed OIDC
-token — an unverified refund endpoint is a way for anyone to zero a wallet) or
-*pull* (a job, no public surface); how the refund entry links back, since
-`play_purchases.ledgerEntryId` is `@unique` and 1:1 with the credit; and whether a
-refund should reach Chatwoot at all.
+**Minted 2026-08-19 as `AURAT-0030`** (bff-play-refund-subscriber), then held by
+the owner on 2026-08-27 — refunds applied by hand until volume said otherwise.
+**Built 2026-09-18 as `AURAT-0077`**, once real purchases reached production and
+the hand-made path stopped being enough.
+
+The three questions `AURAT-0030` left open are settled:
+
+- **Push or pull — push, with the sweep behind it.** Both, in other words, and
+  the pair is the point. The **Voided Purchases API** alone would have closed
+  the rail — it needs nothing the verifier did not already have, so the Pub/Sub
+  topic of `AURAS-0002` step 8 never gated anything — but polling alone is half
+  of the standard arrangement, and Google's own guidance is to take the
+  notification. So: RTDN push reverses a void in seconds, an hourly sweep
+  catches what was never delivered, exactly as the reconciliation poll sits
+  behind the Chatwoot webhook (`AURAI-0002` §2.4).
+
+  **Push rather than pull**, and the reason is that it costs less here, not
+  more: `google-auth-library` is already a dependency and verifies Google's
+  signed OIDC token, so there is no new package; `chatwoot-webhook.controller`
+  is the same shape already reviewed and running; and Pub/Sub retries on any
+  non-2xx, which Chatwoot's webhook never did. Pull would have added
+  `@google-cloud/pubsub` and a long-lived connection this service has no other
+  reason to hold. The risk that made push look worse — a public route that
+  moves money — is real and is closed by verifying before trusting; and its
+  worst case is vandalism, since a forged notification could only *reduce* a
+  balance, never credit one.
+- **How the refund links back** — `play_purchases.refundEntryId`, nullable and
+  unique, beside `ledgerEntryId`. A one-time product is refunded whole, so
+  there is exactly one reversal per purchase and the constraint says so.
+- **Does a refund reach Chatwoot** — no. Nothing is posted to the desk. A
+  chatter seeing a balance go negative remains a support question, not an
+  engineering one, and inventing an activity line for it would put a money
+  event on a surface that holds conversations.
 
 ## NOT in scope
 
