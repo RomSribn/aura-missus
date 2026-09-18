@@ -67,6 +67,26 @@ One-offs: Google Play developer $25 (paid), Apple $99 (yearly, ordered
 **SMS is the only cost that scales with people who never pay**, which is why the
 region allowlist (`TECH-DEBT.md` #1) doubles as the spend control.
 
+#### When each cost started, and what has been paid (as of 2026-09-18)
+
+| Cost | Started | Elapsed | Paid so far |
+|---|---|---|---|
+| Google Play developer, one-off | account approved 2026-08-18 | — | $25.00 |
+| Domain `aura-app.cc` | registered **2026-08-18** (whois), a year prepaid | 1 month of 12 | $8.26 |
+| Hetzner CX33 | **2026-08-19** — first boot 16:46 UTC, Coolify installed the same day | **1 month** | ≈ $12.81 |
+| Firebase Blaze (SMS) | card attached 2026-08-28 with the $300 trial credit | 3 weeks | **$0** — the credit covers it to ~2026-11-26 |
+| Spacemail Pro | 2026-09-17, a year prepaid | 1 day of a year | $11.76 |
+| Apple Developer Program | ordered 2026-09-18, a year | — | $99.00 |
+| **Total out of pocket** | | | **≈ $156.83** |
+
+Most of that is prepaid a year ahead; only one month of server has actually
+been consumed. **Spending began on 2026-08-19**, when the server appeared —
+before that only the Play fee and the domain had been paid.
+
+Next charges: Hetzner monthly (invoiced at the start of the month for the one
+just ended); Firebase from ~2026-11-26, and only for SMS; the domain
+2027-08-18, the mailbox 2027-09-17, Apple 2027-09-18.
+
 ### Services
 
 Coolify project **`aura`**, two environments:
