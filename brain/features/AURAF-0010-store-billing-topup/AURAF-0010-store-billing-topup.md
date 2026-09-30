@@ -28,11 +28,11 @@ This is the **store** rail. `AURAF-0009` is the **card** rail, and per
 | AURAF-0010-005 | me | ✓ | ✓ | ✓ | — |  | A cancelled purchase is silent; a genuine failure says so and leaves the user's money with Google |
 | AURAF-0010-006 | me | ✓ | ✓ | — | ✓ |  | A refunded or revoked purchase debits the wallet (negative entry; balance may go below zero) |
 | AURAF-0010-007 | me | — | — | — | — |  | Play Console: app created, tiers published, internal-testing track, licence testers — owner runbook `AURAS-0002`. **Account approved and app created 2026-08-18** (organisation, `cc.silvermind.aura`); the remainder waits on the first upload |
-| AURAF-0010-008 | me | — | ✗ | ✗ | ✓ |  | The same rail on iOS via StoreKit (`AURAD-0017`). **BE built in `AURAT-0082`** (2026-09-30): `POST /v1/wallet/top-ups/apple` asks the App Store Server API (production → sandbox), verifies the JWS to Apple Root CA G3, same tier table and checks as Play; `POST /webhooks/apple` + hourly notification-history sweep for `REFUND` / `REFUND_REVERSED`. **Live 2026-09-30:** released to prod (`311b0a2`); two sandbox purchases from TestFlight build 2 redeemed once each (+$35). Refunds not yet exercised live — notification URLs pending in App Store Connect. App half: `AURAT-0081` |
+| AURAF-0010-008 | me | ✓ | ✓ | ✓ | ✓ |  | The same rail on iOS via StoreKit (`AURAD-0017`). **BE built in `AURAT-0082`** (2026-09-30): `POST /v1/wallet/top-ups/apple` asks the App Store Server API (production → sandbox), verifies the JWS to Apple Root CA G3, same tier table and checks as Play; `POST /webhooks/apple` + hourly notification-history sweep for `REFUND` / `REFUND_REVERSED`. **Live 2026-09-30:** released to prod (`311b0a2`); two sandbox purchases from TestFlight build 2 redeemed once each (+$35). Refunds not yet exercised live — notification URLs pending in App Store Connect. **App half done in `AURAT-0081`** (2026-09-30): `transactionId` (never the JWS) to the BFF, `appAccountToken` = `purchaseAccountId`, unfinished transactions swept at launch, the sheet names the App Store; build `1.0.0 (2)` in TestFlight. The US `displayPrice` seen in TestFlight under a tier charged $29 is to be re-checked on the first production sale |
 
 `App` = approved against the source of truth (`AURAD-0010`), `Own` = owner
 ratified. Rows 001–005 are `AURAT-0026` (app) + `AURAT-0027` (BFF); row 006 is
-**`AURAT-0077`** (executing `AURAT-0030`) — see below; row 007 is the owner; row 008 has no task.
+**`AURAT-0077`** (executing `AURAT-0030`) — see below; row 007 is the owner; row 008 is `AURAT-0081` (app) + `AURAT-0082` (BFF).
 
 Row 003's `BE` was corrected `✗ → —`: the localized price comes from
 `fetchProducts` against Play and the BFF has no part in it, so there was never
