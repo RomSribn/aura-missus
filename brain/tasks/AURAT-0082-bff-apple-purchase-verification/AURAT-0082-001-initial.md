@@ -50,12 +50,37 @@ App Store Server Notifications V2: ручка для Apple, проверка п�
 URL уведомлений ставится в App Store Connect на **прод и на песочницу
 отдельно**.
 
-## Что нужно от владельца
+## Доступ к App Store Server API — есть
 
-- **Ключ In-App Purchase** (App Store Connect → Users and Access →
-  Integrations): `.p8`, Key ID, Issuer ID. Это **не** тот ключ, которым
-  загружаются сборки (`Y597YZ5Q6C`) — у того нет доступа к App Store Server API.
+Ключ **In-App Purchase** создан владельцем 2026-09-30:
+
+| Что | Значение |
+|---|---|
+| Key ID | `CSNPA77W6Y` |
+| Issuer ID | `9bc0ba73-046e-410f-9499-ecfedfebab2a` — **тот же**, что у ключа загрузки сборок; отдельного issuer у In-App Purchase нет |
+| Файл | `~/.appstoreconnect/private_keys/SubscriptionKey_CSNPA77W6Y.p8`, права `600`, в репозитории его нет |
+| Токен | ES256, заголовок с `kid`, тело с `iss`, `iat`, `exp`, `aud: appstoreconnect-v1` и **`bid: cc.silvermind.aura`** — последнее отличает токен для Server API от токена для App Store Connect API |
+
+**Проверено в маноре 2026-09-30**, `GET /inApps/v1/transactions/0`:
+
+| Хост | Ответ |
+|---|---|
+| `api.storekit-sandbox.itunes.apple.com` | `400 {"errorCode":4000006,"errorMessage":"Invalid transaction id."}` — **ключ принят**, ошибка про сам идентификатор |
+| `api.storekit.itunes.apple.com` | **`401`, тело пустое** |
+
+**Ловушка на 401 в проде.** Приложение ни разу не продавалось, и прод-хост
+Server API отвечает на такой ключ `401`. Это **не** признак неверного ключа и
+не повод чинить подпись: порядок «спросить прод, при промахе спросить
+песочницу» (`AURAD-0017`) должен считать `401` от прода такой же «не здесь»,
+как и `404`, — иначе сборка из TestFlight будет валиться с ошибкой
+конфигурации там, где всё настроено правильно. Пересмотреть после первой
+реальной продажи.
+
+## Что ещё нужно от владельца
+
 - **Paid Applications Agreement** — без него покупки не продаются вовсе.
+  На 2026-09-30 в состоянии `Processing`: банк (Wise, бельгийский IBAN на
+  Silvermind OÜ) и обе налоговые формы США поданы и `Active`.
 - **Песочный тестировщик** (Users and Access → Sandbox) для прогона.
 
 Идентификаторы, которые уже есть: приложение `6813629245`, bundle id
