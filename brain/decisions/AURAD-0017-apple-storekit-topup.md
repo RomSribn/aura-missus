@@ -65,6 +65,14 @@ id. The display names in App Store Connect read `$10 wallet credit` while Apple
 may charge `$9.99` — that is rule 1 again, and it is the same gap Play has had
 since August.
 
+*Measured 2026-09-30 (`AURAT-0081-011`/`012`):* the gap is wider than that.
+Only the USA carries the manual price; the other 174 storefronts are Apple's
+automatic prices with local tax, so `usd25` is €29 across the eurozone and $29
+in Ukraine and most dollar storefronts. The owner accepted this — no manual
+per-territory prices. Separately, TestFlight showed the US `displayPrice`
+($25.00) under a tier whose sheet charged $29; this is to be re-checked on the
+first production sale, not patched with a "+VAT" label.
+
 ## What this costs
 
 Two tasks, in two repositories: `AURAT-0081` (app — the iOS branch of the
