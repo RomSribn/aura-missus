@@ -850,6 +850,45 @@ a sequel.
   them under Profile → Notifications, so tell them not to. The same day
   `captain_tasks` was disabled on both accounts: with no OpenAI key it does
   nothing, but a key added later would send texts to OpenAI.
+- **The «Aura» tab in a conversation is the BFF's booking widget**
+  (`AURAT-0083`, read only). Three pieces, in this order:
+
+  1. **BFF env** (both environments, Coolify → variables, *not* build-time):
+     `AGENT_DESK_FRAME_ANCESTOR=https://chat.aura-app.cc`. Redeploy. Check:
+     `https://bff[-dev].aura-app.cc/agent-desk` opened directly answers `200`
+     and says it opens only inside Chatwoot.
+  2. **The bridge in `DASHBOARD_SCRIPTS`** — once for the installation. Not
+     settable in the super-admin screen on the community edition (the field is
+     enterprise-only there); the runner writes the same installation config,
+     keeps anything else already in it, and Chatwoot's boot does not overwrite
+     it (`ConfigLoader` only adds missing keys).
+
+     **The script is not in the Chatwoot image** — it lives in `aura-bff`, so
+     running it from a shell inside the container finds no file (seen
+     2026-10-12). Feed it through stdin from a machine with an `aura-bff`
+     checkout (any branch that has it), into `aura-chatwoot`'s rails container:
+
+     ```
+     ssh root@<host> "docker exec -i -e AGENT_DESK_ORIGINS=https://bff.aura-app.cc,https://bff-dev.aura-app.cc \
+       \$(docker ps --format '{{.Names}}' | grep -m1 '^rails-') bundle exec rails runner -" \
+       < deploy/chatwoot/install-agent-desk-bridge.rb
+     ```
+
+     Check the container name first (`docker ps --format '{{.Names}}' | grep
+     rails`) if the `^rails-` match is ambiguous. The dev BFF being in the list means
+     the owner's sign-in, valid in both accounts, reaches the dev BFF when the
+     owner opens the tab in `Aura Dev` — accepted (`AURAT-0083-010`).
+  3. **The tab, per account, in the UI** (account administrator): **Settings →
+     Integrations → Dashboard Apps → Configure → Add a new dashboard app**,
+     name `Aura`, endpoint `https://bff.aura-app.cc/agent-desk` in account 1
+     and `https://bff-dev.aura-app.cc/agent-desk` in account 2. Each account
+     must frame its OWN environment's BFF. There is no installation-wide
+     dashboard app — `dashboard_apps.account_id` is NOT NULL.
+
+  Undo: delete the dashboard app in the same screen; `AGENT_DESK_REMOVE=1` on
+  the bridge script takes the bridge out. If the tab says Chatwoot did not hand
+  over the sign-in, the bridge is missing or the BFF's origin is not in
+  `AGENT_DESK_ORIGINS`.
 
 ---
 
