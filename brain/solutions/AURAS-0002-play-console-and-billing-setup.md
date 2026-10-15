@@ -611,6 +611,32 @@ answers 401 rather than the 404 the flag-off state returns.
 **Unrelated and still open:** Play Console reports *"There is an issue with your
 payments profile"*, which blocks real purchases regardless of API access.
 
+> **Closed 2026-10-15 by a real purchase.** Money went through the rail for the
+> first time in the project's life: `aura.topup.usd10`, order
+> `GPA.3371-5539-2229-51258`, region UA, bought from a Google account that is
+> **not** a licensed tester (the owner's own account always produced test
+> purchases — that is why the September ones proved nothing).
+>
+> Verified against Google's own answer
+> (`purchases.products.get`), not against our own records:
+>
+> | Field | Value | Means |
+> |---|---|---|
+> | `purchaseType` | **absent** | a real purchase; the field appears only for test ones |
+> | `purchaseState` | `0` | paid |
+> | `acknowledgementState` | `1` | acknowledged |
+> | `consumptionState` | `1` | consumed **after** our credit — the order `AURAD-0010` insists on |
+> | `obfuscatedExternalAccountId` | `0d54ea96-4d3f-4307-97cc-13bdb259b500` | **matches** the wallet's `purchaseAccountId` |
+>
+> On our side: one `TOPUP 1000` ledger entry, no duplicate, wallet balance
+> `$10.00`. This is the guarantee `AURAD-0010` rests on — "user A cannot redeem
+> user B's token" — and it had never been exercised with a genuine token until
+> now. The payments-profile warning above was therefore not blocking anything.
+>
+> Still unexercised: **the refund path** (`AURAT-0077`). Refunding this order
+> from Play Console → Order management within 48 hours costs nothing and would
+> prove the compensating entry fires on Google's notification.
+
 **`TECH-DEBT #17` is only partly paid.** The verifier has now spoken to Google
 and been correctly refused — but no genuine purchase token has been redeemed. On
 the first real one, check that `obfuscatedExternalAccountId` comes back: the
