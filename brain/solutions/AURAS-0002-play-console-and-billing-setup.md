@@ -633,9 +633,28 @@ payments profile"*, which blocks real purchases regardless of API access.
 > user B's token" — and it had never been exercised with a genuine token until
 > now. The payments-profile warning above was therefore not blocking anything.
 >
-> Still unexercised: **the refund path** (`AURAT-0077`). Refunding this order
-> from Play Console → Order management within 48 hours costs nothing and would
-> prove the compensating entry fires on Google's notification.
+> **The refund path was exercised the same hour** and works. The owner refunded
+> the order from Play Console → Order management with **Remove entitlement
+> ticked** — that checkbox is what makes Google send the voided-purchase
+> notification; a refund without it returns the money but leaves the purchase
+> standing, and nothing would have reached us.
+>
+> Six and a half minutes later, on our side:
+>
+> | | |
+> |---|---|
+> | Ledger | `TOPUP +1000` 16:21:59, then `STORE_REFUND −1000` 16:28:33 — compensating, the original entry untouched |
+> | Wallet balance | `0` |
+> | `play_purchases.refundEntryId` | filled |
+> | Log | `PlayRefundService`: "Google voided play purchase … reversed 1000 minor units, balance now 0"; `PlayRefundProcessor` `outcome: debited` |
+>
+> Note the currency: Google refunded **UAH 539.99** (the Ukrainian storefront
+> price) while the ledger reversed **$10** — the credit is defined by the
+> product, not by what was charged locally. That is rule 1 of `AURAD-0010` and
+> it holds in both directions.
+>
+> So the Play money rail is proven end to end: card → purchase → credit →
+> refund → debit. `AURAT-0077` no longer rests on unit tests alone.
 
 **`TECH-DEBT #17` is only partly paid.** The verifier has now spoken to Google
 and been correctly refused — but no genuine purchase token has been redeemed. On
