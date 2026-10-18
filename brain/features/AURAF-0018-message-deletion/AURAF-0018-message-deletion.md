@@ -1,6 +1,6 @@
 # AURAF-0018 — Удаление сообщения: удалил в Chatwoot — пропало в приложении
 Type: product
-Status: done — app `AURAT-0097` (`aura-app` `develop` @ `9f75e34`), BFF `AURAT-0098` (`aura-bff` `develop` @ `bb00d30`); проверено владельцем на устройстве 2026-10-18
+Status: done — app `AURAT-0097` (`aura-app` `develop` @ `9f75e34`), BFF `AURAT-0098` (`aura-bff` `develop` @ `bb00d30`); проверено владельцем на устройстве 2026-10-18; в Google Play с AAB 28 (1.0.3) 2026-10-19
 Priority: P1
 Source spec: none (слова владельца, `AURAT-0097-001`)
 
