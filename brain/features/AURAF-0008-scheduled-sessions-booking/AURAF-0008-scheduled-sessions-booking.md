@@ -120,6 +120,16 @@ answers per duration — `AURAD-0009`, second amendment). The app halves of 006 
    session of the caller, newest slot first, all advisors, all statuses
    (`AURAT-0018`). It is a different gap from `GET /v1/conversations`
    (BFF `TECH-DEBT #12`), which stays open.
+5. **A retry with the same `idempotencyKey` is answered before the request is
+   checked** (`AURAT-0109`, found by the web's `AURAT-0107-005`). Book and extend
+   used to judge the slot / lead / horizon / block / advisor first, so a booking
+   whose response was lost and whose slot had since aged into the lead time came
+   back 400 — both clients read that as "not charged", dropped the key, and the
+   next attempt charged again. The BFF now looks the key up first (book: by user +
+   advisor; extend: by the wallet's charge, before the session's state) and returns
+   the original session with the current balance. The body is deliberately **not**
+   compared: a retry that changed the slot gets the session actually bought (owner
+   decision, 2026-10-20; the web relies on it). Contracts unchanged.
 
 ## Open questions
 
