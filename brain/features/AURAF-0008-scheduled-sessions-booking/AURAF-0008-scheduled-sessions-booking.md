@@ -63,6 +63,13 @@ answers per duration — `AURAD-0009`, second amendment). The app halves of 006 
 007 are `AURAT-0016` / `AURAT-0022`, and the instant path's app half is
 `AURAT-0024`.
 
+The caller's own calendar is one rule on every write that takes or widens a
+window (**`AURAT-0113`**): booking, reschedule (row 009) and extend all answer
+the same 409 when the new window overlaps another live session of the caller's
+with any advisor — reschedule and extend used to check only the advisor's. The
+reschedule response's `balanceMinor` is read under the wallet lock, like book /
+extend / cancel. Contracts and clients unchanged.
+
 ## NOT in scope
 
 - **Voice / video.** Removed from the product entirely — `Session.type` is always
