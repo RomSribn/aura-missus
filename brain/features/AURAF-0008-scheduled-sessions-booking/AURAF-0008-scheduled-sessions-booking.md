@@ -51,6 +51,7 @@ model, so they are independent of the conflict and are being built now as
 | AURAF-0008-010 | spec | ✓ | ✓ | ✗ | ✗ |   | Cancel sheet, both refund variants driven by `hoursUntil` — **mirrored server-side** |
 | AURAF-0008-011 | spec | ✓ | ✓ | ✗ | ✓ |   | Real availability + pricing API replaces the deterministic slot stub |
 | AURAF-0008-012 | spec | ✓ | ✓ | ✗ | — |   | Local notification 30 min before + "Add to calendar" — **also owns the copy `AURAT-0016` removed**: the Booked screen's "We'll remind you 30 minutes before" + its calendar button, and the Upcoming card's "Reminder set · 30 min before". They were promises with no mechanism behind them, so they come back with this row |
+| AURAF-0008-013 | owner 2026-10-21 | ✓ | ✓ | ✓ | ✓ |   | "Now" leads today's `SlotGrid` on Book a session when `availability.instantAvailable` holds for the chosen block; booked with `startNow`, no `startsAt`, through the same Review + checkout; ends in the thread with "Session started · N min", not on Booked. Reschedule offers no "Now" (`AURAT-0116`) |
 
 `Own` = owned by this feature. `UI`/`BE` track what is actually built; all rows
 start `✗`. `—` = not applicable to that side.
@@ -62,6 +63,10 @@ cancel with refund tiers, sessions list) and widened by **`AURAT-0023`**
 answers per duration — `AURAD-0009`, second amendment). The app halves of 006 /
 007 are `AURAT-0016` / `AURAT-0022`, and the instant path's app half is
 `AURAT-0024`.
+
+Row 013 is **`AURAT-0116`** (app); its BFF half needed nothing new — `instantAvailable`
+and `startNow` came with `AURAT-0023`, and `AURAT-0115` put the slot lead back to 0 so the
+nearest grid slot is free again. The web twin is `AURAT-0117`.
 
 The caller's own calendar is one rule on every write that takes or widens a
 window (**`AURAT-0113`**): booking, reschedule (row 009) and extend all answer
