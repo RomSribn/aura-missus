@@ -1,6 +1,6 @@
 # AURAS-0004 — Production: Hetzner + Coolify, and how to operate it
 
-Date: 2026-08-19 · updated 2026-09-17
+Date: 2026-08-19 · updated 2026-10-23
 Status: **running — two environments on one host: `production` (created
 2026-09-14 … 16, no real users yet) and `development` (test data).** This is the
 document to follow; `AURAS-0003` (AWS) is on hold and describes infrastructure
@@ -104,7 +104,9 @@ Coolify project **`aura`**, two environments:
 
 These are the Coolify resources, and they are **not** everything answering on
 `aura-app.cc`: the legal pages live on Netlify, off this host entirely — see
-*The legal pages are not on this host* below.
+*The legal pages are not on this host* below. The web client is not on this host
+either: it is planned on Cloudflare Pages at `web.aura-app.cc` /
+`web-dev.aura-app.cc` (`AURAD-0020`), and nothing of it runs yet.
 
 Every application deploys from **`RomSribn/aura-bff`** — the BFF from the root
 `Dockerfile`, Chatwoot from `deploy/coolify/chatwoot.compose.yml`. One
@@ -584,6 +586,17 @@ Nothing here touches the Coolify stack. The apex was empty before this — no A,
 no CNAME, no MX, no TXT — so adding it broke nothing, and that was checked
 rather than assumed.
 
+**Re-measured 2026-10-23: the apex and `www` are now proxied by Cloudflare**, no
+longer DNS-only as the table says. Both resolve to Cloudflare's addresses
+(`104.21.30.137`, `172.67.172.246`), and responses carry `server: cloudflare` and
+`cf-ray` on top of Netlify's own `x-nf-request-id` and `cache-status: "Netlify
+Edge"`. `www` answers `301` → `https://aura-app.cc/`, issued by Netlify. Which
+record sits behind the proxy (the `A` to `75.2.60.5` or the `CNAME` to
+`aura-app-landing.netlify.app`) cannot be seen from outside — the dashboard
+says. `/privacy/` and `/terms/` still `200`; `/.well-known/apple-app-site-association`,
+`/.well-known/assetlinks.json`, `/robots.txt` and `/sitemap.xml` are `404`. `bff.`,
+`bff-dev.` and `chat.` remain `37.27.199.90`, DNS-only.
+
 ### How it is operated, and why that is the real entry
 
 - **Account: the owner's personal Netlify account.**
@@ -672,6 +685,12 @@ all three consequences above. What must **not** happen is a second hand-managed
 copy: `deploy/Caddyfile` and `deploy/terraform/` are already a directory that
 describes a stand which does not run (`AURAS-0003`), and that trap does not need
 a sequel.
+
+**Decided 2026-10-23 (`AURAD-0020`), not yet done:** a third way. The source goes
+into `RomSribn/aura-web` as its own folder and deploys from git to Cloudflare
+Pages on the apex, as a project separate from the web client's; `/privacy/` and
+`/terms/` keep their paths, and Netlify is retired after the cutover
+(`AURAT-0126`). Until then everything in this section still holds.
 
 ## Chatwoot specifics
 

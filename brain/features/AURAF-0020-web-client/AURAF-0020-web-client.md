@@ -122,6 +122,8 @@ mt nl pl pt ro sk sl sv), i18next; язык — первый поддержив�
 
 ## Context
 - Стек и топология — `AURAD-0019`; план фаз и FSD-раскладка — `AURAI-0007`.
+- Хостинг и домен — `AURAD-0020`: `web.aura-app.cc` / `web-dev.aura-app.cc` на Cloudflare Pages,
+  лендинг — на apex отдельным сайтом (`AURAT-0124` веб, `AURAT-0125` BFF, `AURAT-0126` лендинг).
 - Расхождения хендоффа (навигация, OTP 4→6, брейкпоинты, `/me` vs `/profile`)
   сверяются с дизайнером до хай-фай; источник истины — README/NAVIGATION, OTP — 6.
 - BFF для веба (задачи `…-bff-…` для `aura-bff-manor`, ID минтятся в
