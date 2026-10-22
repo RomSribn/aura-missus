@@ -12,3 +12,8 @@ SM-A505FN): «Now» на экране брони; замечание про Top 
   влит в `develop` @ `551b95e`; фикс Top Up с Review — через `wts-release slave-1`.
 - brain: шаги 002–015, `AURAF-0008-013`.
 - BFF — `AURAT-0115` (закрыта), веб — `AURAT-0117` (`aura-web-manor`).
+
+## Устройство после release (2026-10-22)
+
+Staging-APK из `develop` @ `caf8736` (с фиксом Top Up) собран в маноре (2 мин 29 с) и
+поставлен `adb install -r` поверх на SM-A505FN — вход сохранён; запуск без FATAL / ошибок RN.
