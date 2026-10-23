@@ -25,7 +25,7 @@ not observed, it says so.
 |---|---|
 | Host | Hetzner **CX33** — 4 vCPU, 8 GB, 80 GB, **Helsinki** (EU) |
 | OS | Ubuntu 24.04 LTS, 4 GB swap, unattended security upgrades, fail2ban |
-| Panel | Coolify **4.3.19** (as of 2026-09-14) at `https://coolify.aura-app.cc` |
+| Panel | Coolify **4.4.7** (as of 2026-10-23; 4.3.19 on 2026-09-14) at `https://coolify.aura-app.cc` |
 | Proxy | Traefik (Coolify's), Let's Encrypt |
 | **Cost** | **$12.81/month** |
 
@@ -51,6 +51,15 @@ month, 100 a day), **FCM**, and Chatwoot itself, which is self-hosted.
 Measured 2026-09-18: prod `aura_bff` 9 MB, `chatwoot` 19 MB, development
 `aura_bff` 9.5 MB; a day's backup of both prod databases is about 0.4 MB. Disk
 16 of 75 GB, 2 of 7 GB RAM.
+
+Measured 2026-10-23 (`free -m`, `docker stats`, at night, both environments up):
+RAM 3.3 of 7.6 GB used, 4.3 available, swap 128 MB of 4 GB; disk 18 of 75 GB;
+load average 0.5 on 4 vCPU. By container: Chatwoot rails 410 MB + sidekiq
+616 MB; the panel with its db, proxy, redis and sentinel ≈ 530 MB; BFF prod
+136 MB, development 112 MB; Postgres prod 117 MB, development 25 MB; the three
+Redis ≈ 30 MB together. The web client will add no container here — it is
+planned as static files on Cloudflare Pages (`AURAD-0020`) — but its users load
+the BFF and Chatwoot exactly as the app's do.
 
 Variable, and the one that matters:
 
