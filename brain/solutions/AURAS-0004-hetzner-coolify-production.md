@@ -112,16 +112,18 @@ Coolify project **`aura`**, two environments:
 | `development` | `aura-bff` | NestJS, Dockerfile build pack, branch `develop` | `https://bff-dev.aura-app.cc` |
 | `development` | `aura-postgres` | `pgvector/pgvector:pg16` — database `aura_bff` | internal only |
 | `development` | `aura-redis` | `redis:7.2`, 512 MB — the BFF on db 1 | internal only |
+| `development` | `aura-web` | nginx with the web client's static build, Dockerfile build pack, branch `develop` (`AURAT-0124`) | `https://web-dev.aura-app.cc` |
 
 These are the Coolify resources, and they are **not** everything answering on
 `aura-app.cc`: the legal pages live on Netlify, off this host entirely — see
-*The legal pages are not on this host* below. The web client is planned here as
-a Coolify resource `aura-web` in both environments — `web.aura-app.cc` from
-`main`, `web-dev.aura-app.cc` from `develop` (`AURAD-0020`) — and nothing of it
-runs yet.
+*The legal pages are not on this host* below. The web client (`AURAD-0020`)
+runs in `development` since 2026-10-23 (`AURAT-0124`, first deploy develop
+`280988a`); its production resource — `web.aura-app.cc` from `main` — is not
+created yet and waits for a BFF release (*The web client* below).
 
-Every application deploys from **`RomSribn/aura-bff`** — the BFF from the root
-`Dockerfile`, Chatwoot from `deploy/coolify/chatwoot.compose.yml`. One
+The BFF and Chatwoot deploy from **`RomSribn/aura-bff`** — the BFF from the root
+`Dockerfile`, Chatwoot from `deploy/coolify/chatwoot.compose.yml`; the web client
+from the root `Dockerfile` of **`RomSribn/aura-web`**. Every build lives in its
 repository, no copy pasted into a panel to drift.
 
 Measured at idle on 2026-09-08 (`AURAI-0004`), before production existed: 2.5 of 7.6 GiB used, disk 17 of
@@ -394,6 +396,34 @@ Three things to know:
   - An additive migration survives the overlap; a destructive one does not. Use
     expand/contract when the first destructive migration appears.
 
+### The web client (`aura-web`, `AURAT-0124`)
+
+Push to `develop` → `web-dev.aura-app.cc`, as the BFF. Three differences:
+
+- **Its variables are build-time, and public.** Vite inlines every `VITE_*`
+  into the bundle, so a change needs a redeploy, not a restart. Coolify passes
+  them as `--build-arg` and adds an `ARG` after each `FROM` — that `ARG` alone
+  writes the value into `docker history` of the served image, `RUN` or not. So
+  nothing but public `VITE_*` values is ever set on this resource
+  (`use_build_secrets` off, the Firebase web config names the project and does
+  not authorise).
+- **The build is the gate.** `deploy/web/build.sh` treats an empty value as
+  unset (the panel cannot express absent), requires the BFF origin and the
+  Firebase project, checks every rule `env.ts` would otherwise check only in the
+  browser, and renders the CSP from `VITE_BFF_ORIGIN`; the final stage runs
+  `nginx -t`. A bad value fails the deploy and the running site stays — without
+  this it would ship as a blank page.
+- **The CSP names the BFF of its own environment.** A new third-party host the
+  page loads (script, iframe, API) goes into `deploy/web/headers.conf` in the
+  same change, or the browser blocks it. Images may come from any `https:` host
+  — the BFF's `*_ASSETS_BASE_URL` decides.
+
+`/assets/*` is cached `immutable` and a missing asset is a plain 404 (never
+cached): for about a second of a deploy Traefik sees both containers, and a new
+`index.html` can ask the old one for a new chunk. noindex on the dev host is the
+domain's *Search indexing* toggle in Coolify (Traefik adds `X-Robots-Tag`), not
+the image.
+
 ### Three traps this platform sets
 
 **Coolify injects the environment into the image build.** `NODE_ENV=production`
@@ -463,9 +493,10 @@ A host that no application claims answers **`503 no available server`**, not
 Domain changes reach Traefik only on Redeploy; before dropping one, the BFF
 request log's `host` field shows whether anything still arrives on it.
 
-Moving the BFF's public host touches exactly four places: the Coolify domain,
+Moving the BFF's public host touches exactly five places: the Coolify domain,
 the Cloudflare A record (DNS-only), the inbox `webhook_url` **and** the bot
-`outgoing_url`, and the app's env target. Nothing at Google points at the BFF —
+`outgoing_url`, the app's env target, and the web's `VITE_BFF_ORIGIN` in that
+environment's `aura-web` (then redeploy it — the CSP follows). Nothing at Google points at the BFF —
 the refund Pub/Sub subscriber was never built.
 
 ### How production was created (2026-09-14 … 16)

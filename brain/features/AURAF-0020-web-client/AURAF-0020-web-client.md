@@ -125,6 +125,9 @@ mt nl pl pt ro sk sl sv), i18next; язык — первый поддержив�
 - Хостинг и домен — `AURAD-0020`: `web.aura-app.cc` / `web-dev.aura-app.cc` — ресурсами Coolify
   на нашей ВМ, лендинг — на apex отдельным ресурсом (`AURAT-0124` веб, `AURAT-0125` BFF,
   `AURAT-0126` лендинг).
+  `web-dev.aura-app.cc` работает с 2026-10-23 (`AURAT-0124`, develop `280988a`): `Dockerfile` +
+  nginx в aura-web, сборка падает на неполной конфигурации. Прод-ресурса ещё нет — после релиза
+  BFF.
 - Расхождения хендоффа (навигация, OTP 4→6, брейкпоинты, `/me` vs `/profile`)
   сверяются с дизайнером до хай-фай; источник истины — README/NAVIGATION, OTP — 6.
 - BFF для веба (задачи `…-bff-…` для `aura-bff-manor`, ID минтятся в
