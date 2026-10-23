@@ -57,9 +57,11 @@ RAM 3.3 of 7.6 GB used, 4.3 available, swap 128 MB of 4 GB; disk 18 of 75 GB;
 load average 0.5 on 4 vCPU. By container: Chatwoot rails 410 MB + sidekiq
 616 MB; the panel with its db, proxy, redis and sentinel ≈ 530 MB; BFF prod
 136 MB, development 112 MB; Postgres prod 117 MB, development 25 MB; the three
-Redis ≈ 30 MB together. The web client will add no container here — it is
-planned as static files on Cloudflare Pages (`AURAD-0020`) — but its users load
-the BFF and Chatwoot exactly as the app's do.
+Redis ≈ 30 MB together. The planned web client (`AURAD-0020`) adds an nginx
+container with 4 MB of static files per environment and, on each deploy, a build
+peaking at about 0.75 GB — measured on the manor: `tsc -b` 663 MB, `vite build`
+749 MB (the BFF's build on this host was not measured). Its users load the BFF
+and Chatwoot exactly as the app's do.
 
 Variable, and the one that matters:
 
@@ -113,9 +115,10 @@ Coolify project **`aura`**, two environments:
 
 These are the Coolify resources, and they are **not** everything answering on
 `aura-app.cc`: the legal pages live on Netlify, off this host entirely — see
-*The legal pages are not on this host* below. The web client is not on this host
-either: it is planned on Cloudflare Pages at `web.aura-app.cc` /
-`web-dev.aura-app.cc` (`AURAD-0020`), and nothing of it runs yet.
+*The legal pages are not on this host* below. The web client is planned here as
+a Coolify resource `aura-web` in both environments — `web.aura-app.cc` from
+`main`, `web-dev.aura-app.cc` from `develop` (`AURAD-0020`) — and nothing of it
+runs yet.
 
 Every application deploys from **`RomSribn/aura-bff`** — the BFF from the root
 `Dockerfile`, Chatwoot from `deploy/coolify/chatwoot.compose.yml`. One
@@ -696,8 +699,8 @@ describes a stand which does not run (`AURAS-0003`), and that trap does not need
 a sequel.
 
 **Decided 2026-10-23 (`AURAD-0020`), not yet done:** a third way. The source goes
-into `RomSribn/aura-web` as its own folder and deploys from git to Cloudflare
-Pages on the apex, as a project separate from the web client's; `/privacy/` and
+into `RomSribn/aura-web` as its own folder and deploys from git as a Coolify
+resource of its own on the apex, separate from the web client's; `/privacy/` and
 `/terms/` keep their paths, and Netlify is retired after the cutover
 (`AURAT-0126`). Until then everything in this section still holds.
 
