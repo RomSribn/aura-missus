@@ -98,6 +98,13 @@ Custom data `action` = `daily-card` → тап открывает экран к�
 - Холодный старт проверить отдельно: тап при неготовом навигаторе и ещё не восстановленной сессии отбрасывается
   (`getCurrentUser()` = null) — так же, как у треда.
 
+## Проверка владельцем на Android до мёржа (2026-10-25)
+
+Staging-APK (`apk:staging`, bff-dev) по кабелю на Galaxy A50 (Android 11), пуши — Console «Send test message»
+по токену из `device_tokens` bff-dev. Владелец подтвердил: пуш доходит; `action=rate` открывает Play;
+`action=daily-card` открывает карту дня — в т.ч. из полностью закрытого приложения (холодный старт).
+iPhone — после мёржа, TestFlight.
+
 ## Дальше
 
 - Часть 4 — после AURAT-0140 (контракты + BFF).
