@@ -88,6 +88,16 @@ Custom data `action` = `rate` → тап открывает страницу Aur
 - Тесты: +3 parse, +1 announcement, +3 taps; push+app — 6 наборов, 28 тестов.
 - Слать «оцените» — как маркетинг: по topic `promo` после AURAT-0140; без вознаграждения за оценку.
 
+## Дополнение: «Карта дня» (по просьбе владельца)
+
+Custom data `action` = `daily-card` → тап открывает экран карты дня (`SCREENS.DAILY_CARD`, поверх вкладок, как с Home).
+- `TapTarget` + `daily-card`; `subscribeToNotificationTaps` принимает `TapNavigation` (`openThread`, `openDailyCard`).
+- `app/navigation/navigation-ref.ts`: общий отложенный переход (`openWhenReady`), `navigateToDailyCard`;
+  `flushPendingThreadNavigation` → `flushPendingNavigation`.
+- Тесты push+app — 6 наборов, 30 тестов.
+- Холодный старт проверить отдельно: тап при неготовом навигаторе и ещё не восстановленной сессии отбрасывается
+  (`getCurrentUser()` = null) — так же, как у треда.
+
 ## Дальше
 
 - Часть 4 — после AURAT-0140 (контракты + BFF).
