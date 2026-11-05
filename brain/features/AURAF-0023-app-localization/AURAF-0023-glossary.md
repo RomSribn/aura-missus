@@ -144,3 +144,10 @@ promo-code) веб покрывает 36 из 40 строк; у `shared` — 11 
   «sesiunea» — к одному виду;
 - «Browse advisors» двумя глаголами в bg, el, et, fr, lt, sk;
 - sl «dobroimetje» в `extend-session:topUp` / `me-page:balance.topUp` при «Stanje» в заголовке.
+- `auth-by-phone:phone.legal` (`AURAT-0162`): ссылки называют документы не так, как их страницы и глоссарий —
+  pl «nasz Regulamin» → «nasze Warunki korzystania», ga «bPolasaí Príobháideachais» → «mBeartas Príobháideachta»;
+  el «Όρους Χρήσης» / «Πολιτική Απορρήτου» → «Όρους χρήσης» / «Πολιτική απορρήτου» (как заголовки страниц).
+  (pl: «Regulamin» — привычное юридическое имя; если владелец выберет его — поменять заголовок страницы и глоссарий,
+  но ссылка и страница должны совпасть.)
+- `app:nav.getStarted` (`AURAT-0162`): hu «Kezdjük» → «Kezdés», el «Ξεκινήστε» → «Έναρξη» (кнопка — отглагольное
+  существительное); `auth-by-phone:code.change` bg «промяна» → «промени» (кнопка — ед. ч. повелительного).
