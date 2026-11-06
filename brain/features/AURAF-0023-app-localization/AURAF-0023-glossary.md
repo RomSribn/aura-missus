@@ -151,9 +151,20 @@ promo-code) веб покрывает 36 из 40 строк; у `shared` — 11 
   но ссылка и страница должны совпасть.)
 - `app:nav.getStarted` (`AURAT-0162`): hu «Kezdjük» → «Kezdés», el «Ξεκινήστε» → «Έναρξη» (кнопка — отглагольное
   существительное); `auth-by-phone:code.change` bg «промяна» → «промени» (кнопка — ед. ч. повелительного).
+- `daily-page` (`AURAT-0164`, приложение взяло экран почти целиком): `ask` — кнопка, а у веба повелительное
+  наклонение везде: bg «Попитайте съветник» → «Попитай съветник», hr «Pitajte» → «Pitaj savjetnika», sl «Vprašajte» →
+  «Vprašaj svetovalca», el «Ρωτήστε έναν σύμβουλο» → «Ερώτηση σε σύμβουλο», hu «Kérdezz egy tanácsadót» →
+  «Tanácsadó megkérdezése», инфинитив в cs / sk / lt / lv / fr / pt / es / de / nl («Zeptat se poradce», «Berater
+  fragen»…); `title` ga «Do chárta don lá» → «Do chárta an lae» (термин), da / sv «Dit / Ditt dagens kort» → «Dagens
+  kort»; el `title` рисуется капсом — «Η ΚΑΡΤΑ ΤΗΣ ΗΜΕΡΑΣ ΣΑΣ».
+- `advisor-page:specialties` (`AURAT-0164`): sl «Področja», lt «Specializacija» (ед. ч.), sv «Specialområden» — у
+  глоссария «Specialnosti», «Specializacijos», «Specialiteter»; `write-review:title` bg «Напишете отзив» → «Остави
+  отзив», el «Γράψτε μια κριτική» → «Γράψτε κριτική» (термин `leave-review`).
 - Профиль и удаление аккаунта (`AURAT-0163`): pt — мужской род в обращении к пользователю (правило «не согласовывать
   с родом»): `auth-by-phone:name.sub` «…vão tratá-lo pelo nome» → «…vão dirigir-se a si pelo nome», `delete-account:
   kept.text` «…sem nada que o identifique» → «…sem dados que permitam a sua identificação»; fr `delete-account:title`
   — обычный пробел перед «?» → U+00A0; `delete-account:keep` — кнопка: hu «Megtartom» → «Megtartás», el «Να
   παραμείνει» → «Διατήρηση»; el подписи полей (`user.fields` / `me-page:account`) рисуются капсом — проверить, пишутся
   ли они на вебе заглавными без тонов.
+- Глоссарий **v2** (`AURAT-0164-008`): `away` — нейтральные формы (пол советника неизвестен), исключения по ширине —
+  в `note` терминов `book`, `rating`, `free-chat`. Вебу — взять копию v2.
