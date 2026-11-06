@@ -151,3 +151,9 @@ promo-code) веб покрывает 36 из 40 строк; у `shared` — 11 
   но ссылка и страница должны совпасть.)
 - `app:nav.getStarted` (`AURAT-0162`): hu «Kezdjük» → «Kezdés», el «Ξεκινήστε» → «Έναρξη» (кнопка — отглагольное
   существительное); `auth-by-phone:code.change` bg «промяна» → «промени» (кнопка — ед. ч. повелительного).
+- Профиль и удаление аккаунта (`AURAT-0163`): pt — мужской род в обращении к пользователю (правило «не согласовывать
+  с родом»): `auth-by-phone:name.sub` «…vão tratá-lo pelo nome» → «…vão dirigir-se a si pelo nome», `delete-account:
+  kept.text` «…sem nada que o identifique» → «…sem dados que permitam a sua identificação»; fr `delete-account:title`
+  — обычный пробел перед «?» → U+00A0; `delete-account:keep` — кнопка: hu «Megtartom» → «Megtartás», el «Να
+  παραμείνει» → «Διατήρηση»; el подписи полей (`user.fields` / `me-page:account`) рисуются капсом — проверить, пишутся
+  ли они на вебе заглавными без тонов.
