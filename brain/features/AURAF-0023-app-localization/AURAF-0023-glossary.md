@@ -17,9 +17,11 @@
 
 **Правка термина** — здесь, `version` + 1. Копии:
 - **веб** своей копии пока не держит — принятие глоссария вебом (копия по `version`, проверка `avoid`) — `AURAT-0177`;
-- **BFF** держит только запретные формы `reader` / `reading` для подписей советников —
-  `src/modules/advisors/labels/glossary-avoid.spec-fixtures.ts` (`GLOSSARY_VERSION`, «re-copy when its version
-  changes», `AURAT-0173`). Перекопировать, когда меняется `avoid`.
+- **BFF** держит только запретные формы `reader` / `reading` — для подписей советников (`AURAT-0173`) и текстов
+  персон (`AURAT-0184`): `src/modules/advisors/labels/glossary-avoid.spec-fixtures.ts` (`GLOSSARY_VERSION` = **3**
+  с `AURAT-0184`, «re-copy when its version changes»). Плюс **локальное расширение** — женские `reader`, которых не
+  ловят основы глоссария: fr `lectric`, it `lettric`, ro `cititoa`, sl `bralk` (помечены `local`; кандидат в v4).
+  Перекопировать, когда меняется `avoid`.
 
 **Версии.** v2 — `AURAT-0155` (96 терминов). **v3** — `AURAT-0174`, 2026-11-07: el `psychic` «διορατικός» (женская
 «διορατική») вместо «μέντιουμ» — это `medium`, и у персон выходило «Μέντιουμ · Μέντιουμ». `avoid` не менялись, поэтому
