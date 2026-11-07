@@ -19,13 +19,17 @@
 - **веб** своей копии пока не держит — принятие глоссария вебом (копия по `version`, проверка `avoid`) — `AURAT-0177`;
 - **BFF** держит только запретные формы `reader` / `reading` — для подписей советников (`AURAT-0173`) и текстов
   персон (`AURAT-0184`): `src/modules/advisors/labels/glossary-avoid.spec-fixtures.ts` (`GLOSSARY_VERSION` = **3**
-  с `AURAT-0184`, «re-copy when its version changes»). Плюс **локальное расширение** — женские `reader`, которых не
-  ловят основы глоссария: fr `lectric`, it `lettric`, ro `cititoa`, sl `bralk` (помечены `local`; кандидат в v4).
-  Перекопировать, когда меняется `avoid`.
+  с `AURAT-0184`, «re-copy when its version changes»; `AURAT-0189` переносит копию в
+  `src/common/language/*.spec-fixtures.ts`). Её локальное расширение (fr `lectric`, it `lettric`, ro `cititoa`,
+  sl `bralk`, sl `bralc`, помечены `local`) вошло в **v4** — BFF перекопирует v4 без пометок `local` (передача
+  `AURAT-0180-009`). Перекопировать, когда меняется `avoid`.
 
 **Версии.** v2 — `AURAT-0155` (96 терминов). **v3** — `AURAT-0174`, 2026-11-07: el `psychic` «διορατικός» (женская
 «διορατική») вместо «μέντιουμ» — это `medium`, и у персон выходило «Μέντιουμ · Μέντιουμ». `avoid` не менялись, поэтому
-копия BFF осталась на 2 и верна. el-строки приложения правки не потребовали (onboarding уже «διορατικούς»).
+копия BFF осталась на 2 и верна. el-строки приложения правки не потребовали (onboarding уже «διορατικούς»). **v4** — `AURAT-0180`, 2026-11-07: `avoid` `reader` —
+формы, до которых не дотягивают основы: женские fr `lectric`, it `lettric`, ro `cititoa`, sl `bralk`; sl косвенные
+`bralc` (bralca, bralcu); множественные it `lettore` → `lettor` (lettori), sk `čitatel` (čitatelia, ľ → l); da
+`læseren` / `læsere` / `læserne` (`word`: `læser` — ещё и глагол «читает»). Переводы приложения правки не потребовали.
 
 ## Порядок перевода слайса
 
