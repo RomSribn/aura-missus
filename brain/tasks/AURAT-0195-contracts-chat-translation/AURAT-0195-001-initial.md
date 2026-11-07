@@ -33,5 +33,7 @@ BFF: язык и согласие (`AURAI-0012` задача 3), конвейе�
 
 ## Контекст слота
 
-Заполняется при запуске: свободный слот `aura-bff-manor`, ветка `feature/AURAT-0195-contracts-chat-translation`; в клоне
-контрактов — ветка от `main` `14073f1`. ID уже выдан — не резервировать.
+Слот `aura-bff-manor` **slave-2**, ветка `feature/AURAT-0195-contracts-chat-translation` (master — develop BFF
+`0410ed7`, missus — `ea394a6`), `wts-start` 2026-11-07. Клон контрактов
+`/Volumes/Work/personal/ai-manors/aura-contracts` — ветка `feature/v0.31.0-chat-translation` от `main` `14073f1`.
+Исполнитель запущен координатором напрямую (без `wts-run`), другие задачи не берёт. ID уже выдан — не резервировать.
