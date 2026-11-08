@@ -25,6 +25,7 @@ in which languages. The owner asked for this on 2026-11-08: «нужны рел�
   - what to check before production.
 - **Rules for "What's new":**
   - at most 500 characters per language;
+  - each item starts with a plain hyphen `- `, never `•` (owner, 2026-11-08);
   - the app's exact UI labels and the glossary;
   - register and typography per `aura-build-rules.md` → «Translations»;
   - promise only what the server will have switched on by the time users get the build.
