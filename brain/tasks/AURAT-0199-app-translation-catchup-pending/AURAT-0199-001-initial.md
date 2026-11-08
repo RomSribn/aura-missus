@@ -36,3 +36,8 @@
 
 Заполняется при запуске: свободный слот `aura-app-manor`, ветка `feature/AURAT-0199-app-translation-catchup-pending` от
 `develop`. ID уже выдан — не резервировать.
+
+## Контекст слота (при запуске)
+
+2026-11-08: `aura-app-manor` slave-0, ветка `feature/AURAT-0199-app-translation-catchup-pending` от `develop` @ `df697f2`
+(`wts-start`). Missus у слотов нет — шаги пишутся в missus манора. Исполнитель запущен координатором.
