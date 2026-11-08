@@ -46,5 +46,6 @@ Eval и замер на staging (задача 6 — платно, с одобр�
 
 ## Контекст слота
 
-Заполняется при запуске: свободный слот `aura-bff-manor`, ветка `feature/AURAT-0198-bff-chat-translation-pipeline` от
-`develop`. ID уже выдан — не резервировать.
+`aura-bff-manor` / `slave-1`, ветка `feature/AURAT-0198-bff-chat-translation-pipeline` в master и missus
+(`bin/wts-start`, 2026-11-08): develop `b2c6375` (с `0196`), missus `28b9ce2`. ID выдан координатором — не
+резервировался. Исполнитель: сессия в `slave-1`; о готовности — координатору «Локализация i18n для aura-app».
