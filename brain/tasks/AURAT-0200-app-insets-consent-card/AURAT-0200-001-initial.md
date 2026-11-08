@@ -56,3 +56,9 @@
 Заполняется при запуске: свободный слот `aura-app-manor`, ветка `feature/AURAT-0200-app-insets-consent-card` от
 `develop`. ID уже выдан — не резервировать. Проверка на устройствах (AVD API 36, A50) — в маноре после мёржа: слейв
 стек не поднимает.
+
+## Контекст слота (заполнено при запуске)
+
+2026-11-08: `aura-app-manor` **slave-0**, ветка `feature/AURAT-0200-app-insets-consent-card` от `develop` @ `351e209`
+(`wts-start`, строка слота в `active-work.md` — busy). Исполнитель — сессия в slave-0, координатор — «Локализация i18n
+для aura-app».
