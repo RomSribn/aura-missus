@@ -35,7 +35,7 @@ in which languages. The owner asked for this on 2026-11-08: «нужны рел�
 
 | Build | Track | Notes | Status |
 |---|---|---|---|
-| Android 1.2.0 (38) | internal → production | `AURAT-0201-001-release-notes` | built 2026-11-08, waiting for the prod BFF (PR #10) and the policy |
+| Android 1.2.0 (38) | production | `AURAT-0201-001-release-notes` | in production; closed 2026-11-09 (`AURAT-0201-003`) |
 
 Earlier builds (up to 1.1.0, 37) had notes in their own task steps, en-US only: for example `AURAT-0152-009`, `0182`.
 
