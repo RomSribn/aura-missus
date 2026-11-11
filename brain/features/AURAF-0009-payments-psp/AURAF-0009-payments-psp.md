@@ -1,7 +1,8 @@
 # AURAF-0009 — Real payments (PSP)
 
 Type: product
-Status: backlog — **not started**
+Status: **ready** (2026-11-11). Провайдер выбран — Stripe Checkout на вебе (`AURAD-0023`). Задачи:
+BFF `AURAT-0207`, веб `AURAT-0208`, условия `AURAT-0209`. См. «Состояние» в конце.
 Priority: P1 (blocks nothing today; unblocks several things that are parked)
 
 ## What
@@ -54,3 +55,35 @@ the rail by `AURAD-0002` and `AURAD-0009`; a second rail is a separate decision.
 2. Does the −$5 first-session credit survive real money, and who funds it?
 3. Do chatters get paid through the same provider, or is payout a separate
    rail entirely?
+
+## Состояние (2026-11-11)
+
+**Охват сузился до веба.**
+- Android пополняет через Google Play Billing (`AURAD-0010`), iOS — через StoreKit (`AURAD-0017`).
+- Карта нужна только на вебе: исследование — `AURAI-0013`, решение — `AURAD-0023`.
+
+**Ответы на открытые вопросы:**
+1. **Провайдер и валюта.** Stripe, аккаунт Silvermind OÜ. Цена и зачисление — в USD. Покупатель
+   платит в своей валюте через Adaptive Pricing, деньги приходят в USD (multi-currency
+   settlement).
+2. **Кредит −$5.** Его заменил оффер −50% на первую сессию (`AURAF-0017`, `OFFER.md`). Это скидка
+   на списание с кошелька, на PSP она не влияет.
+3. **Выплаты советникам** — не через Stripe и не в этой фиче. Советники — команда (Terms §05).
+
+**Задачи** (порядок: контракты и BFF → веб; условия — параллельно):
+
+| ID | Где | Что |
+|---|---|---|
+| `AURAT-0207` | `aura-bff-manor` | Checkout Session, вебхук, зачисление, статус, отмена, возврат на карту из бэкофиса, диспуты, сверка; контракты |
+| `AURAT-0208` | `aura-web-manor` | настоящий `TopUpProvider` вместо фейка, флаг в прод-сборке, отмена, Back из bfcache, правило суммы, строки на 24 языках |
+| `AURAT-0209` | `aura-app-manor` | Terms §06–07, Privacy (Stripe), данные продавца (рег. код, адрес, телефон) |
+
+**Ворота live** (`AURAD-0023`):
+1. Stripe активировал аккаунт Silvermind OÜ.
+2. Опубликован `AURAT-0209`.
+3. Закрыт вопрос НДС (`AURAI-0013` шаг 4).
+4. Прод-веб работает на `web.aura-app.cc` (`AURAD-0020`).
+5. Live-ключи и live-вебхук стоят в прод-BFF.
+6. В live включены Adaptive Pricing и методы оплаты.
+
+После этого `main` BFF и веба — через merge gate.

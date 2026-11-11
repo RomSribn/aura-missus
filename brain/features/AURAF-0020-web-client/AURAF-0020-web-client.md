@@ -85,7 +85,9 @@ Source spec: `/Volumes/Work/personal/aura_web/design_handoff_aura_web/{README,ST
 
 Бэклог (`AURAT-0108`, пробелы настоящего PSP): веб работает на фейковом провайдере за
 `PSP_ENABLED` (порт `TopUpProvider` — то, что PSP реализует через BFF); выбор PSP — `AURAF-0009`; ID
-задач — в `aura-app-manor`.
+задач — в `aura-app-manor`. **2026-11-11:** PSP выбран — Stripe Checkout (`AURAD-0023`). 037–040
+делают `AURAT-0207` (BE) и `AURAT-0208` (UI), 041 — `AURAT-0208`. Строки 011 и 042 решаются в спеке
+`AURAT-0208`; рекомендация — отдельными задачами после основного пути.
 
 | # | Src | Own | App | UI | BE | Del | Item |
 |---|-----|-----|-----|----|----|-----|------|
