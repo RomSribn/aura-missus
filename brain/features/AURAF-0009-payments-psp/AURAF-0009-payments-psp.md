@@ -77,6 +77,8 @@ the rail by `AURAD-0002` and `AURAD-0009`; a second rail is a separate decision.
 | `AURAT-0207` | `aura-bff-manor` | Checkout Session, вебхук, зачисление, статус, отмена, возврат на карту из бэкофиса, диспуты, сверка; контракты |
 | `AURAT-0208` | `aura-web-manor` | настоящий `TopUpProvider` вместо фейка, флаг в прод-сборке, отмена, Back из bfcache, правило суммы, строки на 24 языках |
 | `AURAT-0209` | `aura-app-manor` | Terms §06–07, Privacy (Stripe), данные продавца (рег. код, адрес, телефон) |
+| `AURAT-0211` | `aura-bff-manor` | встроенный Checkout (`embedded_page`): `client_secret` и публичный ключ в ответе старта, контракты `v0.33.0`; после merge `AURAT-0207` (`AURAD-0023`, поправка 2026-11-11) |
+| `AURAT-0212` | `aura-web-manor` | форма Stripe в шторке Book без ухода с сайта, CSP для Stripe.js, строки на 24 языках; после merge `AURAT-0208` и `v0.33.0` |
 
 **Ворота live** (`AURAD-0023`):
 1. Stripe активировал аккаунт Silvermind OÜ.
