@@ -38,25 +38,37 @@ Stripe активирует аккаунт Silvermind OÜ, и после вор�
    - отменённая сессия возвращается на баланс (`AURAD-0009`, без изменений);
    - неистраченный баланс по запросу возвращается на карту (Terms §07). Возврат делает BFF через
      Stripe Refunds, а не человек в Dashboard;
-   - возврат, начатый в Dashboard, всё равно попадает в ledger через `charge.refunded`;
-   - открытый диспут списывает сумму с кошелька; если диспут выигран, она возвращается.
+   - возврат, начатый в Dashboard, всё равно попадает в ledger через `charge.refunded` /
+     `refund.updated`; не прошедший возврат (`failed` / `canceled`) возвращает сумму на баланс;
+   - диспут списывает сумму с кошелька, когда Stripe снимает деньги
+     (`charge.dispute.funds_withdrawn`), и возвращает её при `charge.dispute.funds_reinstated`. По
+     запросу информации (inquiry) деньги не снимают, поэтому и кошелёк не трогаем.
 5. **Оплата на странице Stripe, методы оплаты подключаются в Dashboard, валюта — через Adaptive
    Pricing.**
    - Методы: карты, Apple Pay, Google Pay, Link, iDEAL, Bancontact, BLIK. Остальные — только после
      отдельной проверки; SEPA Debit — нет.
+   - 3DS запрашивается для всех карт (`payment_method_options.card.request_three_d_secure: any`).
+     Иначе платёж до ~€30 может пройти без 3DS по исключению для мелких сумм, и мошеннический
+     диспут ляжет на нас.
+   - Лимитов на пополнения в сутки на пользователя нет (решение владельца 2026-11-11). Сумма одного
+     пополнения — целые доллары от $5 до $120.
    - Stripe Tax ждёт исследования НДС (`AURAI-0013` шаг 4).
    - Managed Payments Stripe не даёт: услуги с участием человека.
 
 ## How it works
 
-- **BFF** (`AURAT-0207`):
-  - старт пополнения → Checkout Session: `mode=payment`, `price_data` в USD,
-    `client_reference_id`, `metadata`, `success_url` и `cancel_url` только на origin из
-    `WEB_ALLOWED_ORIGINS`, `locale`, `consent_collection.terms_of_service`, короткий `expires_at`;
-  - вебхук: сырое тело запроса и проверка подписи → быстрый ответ 2xx → обработка (зачисление,
-    отказ, истечение, возврат, диспут);
-  - статус для опроса: `GET /v1/wallet/top-ups/:id`;
-  - возврат на карту — из бэкофиса.
+- **BFF** (`AURAT-0207`; пути — по её спеке 2026-11-11, сверить с итоговой версией):
+  - старт пополнения — `POST /v1/wallet/top-ups/card` → Checkout Session: `mode=payment`,
+    `price_data` в USD, `client_reference_id`, `metadata`, `success_url` и `cancel_url` только на
+    origin из `WEB_ALLOWED_ORIGINS`, `locale`, `consent_collection.terms_of_service`, короткий
+    `expires_at`, 3DS для всех карт;
+  - вебхук `POST /webhooks/stripe`: сырое тело запроса и проверка подписи → быстрый ответ 2xx →
+    обработка (зачисление, отказ, истечение, возврат, диспут);
+  - статус для опроса — `GET /v1/wallet/top-ups/card/:paymentId`; отмена —
+    `POST /v1/wallet/top-ups/card/:paymentId/cancel`;
+  - возврат на карту — из бэкофиса;
+  - всё за отдельным флагом `CARD_TOP_UP_ENABLED`. `NODE_ENV=production` стоит на всех стендах,
+    поэтому без флага прод-BFF с включённым биллингом не запустился бы без live-ключей.
 - **Веб** (`AURAT-0208`): настоящий `TopUpProvider` вместо фейка, `startCard` → BFF → переход на
   `url`. Маршрут `/checkout` и опрос — из `AURAT-0108`. Отдельная кнопка Apple Pay / Google Pay
   уходит: её показывает сам Checkout.

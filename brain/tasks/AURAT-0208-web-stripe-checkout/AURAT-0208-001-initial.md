@@ -22,14 +22,18 @@ Date: 2026-11-11
 (`src/features/pay/model/top-up-provider.ts:25–36`) не меняется.
 
 1. **Адаптер Stripe.**
-   - `startCard({ paymentId, amountMinor, returnPath })` → `POST /v1/wallet/top-ups/stripe` →
+   - `startCard({ paymentId, amountMinor, returnPath })` → `POST /v1/wallet/top-ups/card` →
      `{ redirectUrl }`. Переход — как сейчас, через `loadPage`.
-   - `status(paymentId)` → `GET /v1/wallet/top-ups/:paymentId`.
+   - `status(paymentId)` → `GET /v1/wallet/top-ups/card/:paymentId`.
+   - Пути взяты из спеки `AURAT-0207` от 2026-11-11 (там же решено: BFF называет вид пополнения
+     `card`, без имени провайдера). Сверить с её итоговой версией.
    - Эндпоинты — в `entities/wallet/api`: RTK Query, ответы разбираются схемами контрактов.
    - Язык страницы Checkout BFF берёт из `?lang=`, который `base-query` уже добавляет к каждому
      запросу.
-2. **Контракты.** Поднять `@aura/contracts` с v0.29.0 до версии со схемами `AURAT-0207`. BFF уже на
-   v0.31.0 — сверить, что изменилось между 0.29 и новой версией. `version` в `package.json`
+2. **Контракты.** Поднять `@aura/contracts` с v0.29.0 до версии со схемами `AURAT-0207` — по её
+   спеке это v0.32.0: `CardTopUpRequest` / `CardTopUpResponse`, `CardTopUpStatusResponse`, константы
+   `CARD_TOP_UP_MIN_USD` / `CARD_TOP_UP_MAX_USD`, коды отказа `card_top_up_*`. BFF уже на v0.31.0 —
+   сверить, что изменилось между 0.29 и новой версией. `version` в `package.json`
    контрактов, похоже, не поднимали (в `node_modules` указана 0.25.0) — сверить.
 3. **Флаг и выбор провайдера.** Сейчас `PSP_ENABLED = DEV && VITE_PSP_ENABLED`
    (`src/shared/config/env.ts:117`; комментарий в строках 110–116: «A real provider lifts `DEV`»).
@@ -38,12 +42,16 @@ Date: 2026-11-11
    - `VITE_PSP_ENABLED` есть также в `Dockerfile:39` и `deploy/web/build.sh:34`.
 4. **Кошелёк (Apple Pay / Google Pay).** Со Stripe отдельная кнопка `payWithWallet` уходит: Checkout
    сам показывает кошельки (решение 2).
-5. **Отмена.** Клиент возвращается по `cancel_url` → веб вызывает отмену в BFF (`AURAT-0207`
-   решение 4) → молча возвращается в шторку, как при нынешнем `cancelled`.
+5. **Отмена.** Клиент возвращается по `cancel_url` — это `returnPath` с `cancelled=1`. Веб вызывает
+   `POST /v1/wallet/top-ups/card/:paymentId/cancel` (`AURAT-0207` решение 4) и молча возвращается в
+   шторку, как при нынешнем `cancelled`. Если человек успел заплатить в другой вкладке, BFF вместо
+   отмены зачислит — веб идёт по обычному исходу статуса.
 6. **Back из bfcache** (`AURAF-0020-041`). Сейчас `use-pay.ts:145–156` сбрасывает в шторку. Если при
    `pageshow` есть сохранённая попытка — вести на `/checkout?payment=`.
-7. **Правило суммы** (`040`). `top-up-plan.ts` — по решению 1 из `AURAT-0207`, например минимум $5
-   с остатком на балансе. Если пополнение больше недостачи, строка плана объясняет почему.
+7. **Правило суммы** (`040`), решено владельцем 2026-11-11 (`AURAT-0207` решение 1Б): целые
+   доллары от $5 до $120, остаток остаётся на балансе. Лимитов в сутки нет. `top-up-plan.ts` берёт
+   границы из констант контрактов. Если пополнение больше недостачи (минимум $5), строка плана
+   объясняет почему.
 8. **Строки — сразу на 24 языках.**
    - Заметка под кнопкой: сейчас `pay` `topUp.note`. Добавить, что оплата идёт на странице Stripe в
      своей валюте, как «Charged by Apple as CA$36.49» в `CHECKOUT.md` приложения.
