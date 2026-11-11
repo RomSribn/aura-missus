@@ -134,3 +134,19 @@ Hosted Checkout проверили вживую из слотов, оплата 
   - в sandbox выключена: `STRIPE_TERMS_CONSENT=none`, это разрешено только с тестовым ключом. В
     sandbox нельзя задать ссылку на Terms — его данные бизнеса доступны только через анкету live;
   - в live галочка обязательна.
+
+## Состояние (2026-11-11)
+
+- **Dev работает на Stripe sandbox.**
+  - BFF `AURAT-0207` — `develop` `06754f5`, bff-dev. В Coolify:
+    - restricted-ключ `rk_test_…` с правами Checkout Sessions и Refunds — Write; PaymentIntents,
+      Charges, Disputes, Events, Products — Read;
+    - секрет вебхука, `STRIPE_TOP_UP_PRODUCT_ID`, `CARD_TOP_UP_ENABLED=true`, `STRIPE_TERMS_CONSENT=none`.
+  - Веб `AURAT-0208` — `develop` `c7912bc`, web-dev с `VITE_PSP_ENABLED=true`.
+- **Проверено владельцем на web-dev:**
+  - оплата `4242…`, затем бронь;
+  - две отмены;
+  - три события вебхука доставлены (`pending_webhooks: 0`), то есть секрет верный.
+  - Веб принят («Принято»).
+- **Фейк** — только в dev с `VITE_PSP_FAKE`; `deploy/web/build.sh` роняет сборку, в которой он есть.
+- **Прод:** `VITE_PSP_ENABLED=false` и `CARD_TOP_UP_ENABLED=false`, пока не пройдены ворота live выше.

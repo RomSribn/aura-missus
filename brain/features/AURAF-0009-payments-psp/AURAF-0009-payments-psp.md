@@ -80,6 +80,9 @@ the rail by `AURAD-0002` and `AURAD-0009`; a second rail is a separate decision.
 | `AURAT-0211` | `aura-bff-manor` | встроенный Checkout (`embedded_page`): `client_secret` и публичный ключ в ответе старта, контракты `v0.33.0`; после merge `AURAT-0207` (`AURAD-0023`, поправка 2026-11-11) |
 | `AURAT-0212` | `aura-web-manor` | форма Stripe в шторке Book без ухода с сайта, CSP для Stripe.js, строки на 24 языках; после merge `AURAT-0208` и `v0.33.0` |
 
+**2026-11-11:** `AURAT-0207` (`06754f5`) и `AURAT-0208` (`c7912bc`) смёржены и проверены владельцем на
+bff-dev / web-dev со Stripe sandbox. Веб принят. Подробности — «Состояние» в `AURAD-0023`.
+
 **Ворота live** (`AURAD-0023`):
 1. Stripe активировал аккаунт Silvermind OÜ.
 2. Опубликован `AURAT-0209`.
