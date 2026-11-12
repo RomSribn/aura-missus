@@ -150,3 +150,23 @@ Hosted Checkout проверили вживую из слотов, оплата 
   - Веб принят («Принято»).
 - **Фейк** — только в dev с `VITE_PSP_FAKE`; `deploy/web/build.sh` роняет сборку, в которой он есть.
 - **Прод:** `VITE_PSP_ENABLED=false` и `CARD_TOP_UP_ENABLED=false`, пока не пройдены ворота live выше.
+
+## Поправка 2026-11-12 — Elements вместо готовой формы
+
+Встроенную форму (`AURAT-0211` / `AURAT-0212`, `embedded_page`) проверили на web-dev. Владелец: «высота
+ифрейма вечно меняется, стили тут выбиваются из наших… Можно отдельно вывести оплату картой и оплату
+apple pay, google pay…». Решение владельца: «держим открытой и делаем elements в ней»
+(`AURAT-0212-013`).
+
+- **Целевой вид — Stripe Elements с Checkout Sessions** (`ui_mode: 'elements'`). Checkout Session та же:
+  зачисление по слову Stripe, вебхук, Adaptive Pricing, 3DS, отмена — без изменений.
+- **В шторке Book:**
+  - кнопки Apple Pay / Google Pay / Link (`ExpressCheckoutElement`);
+  - выбор валюты (`CurrencySelectorElement`, обязателен при Adaptive Pricing);
+  - кнопка перехода к шагу оплаты: `PaymentElement` с нашей кнопкой и нашими текстами.
+- **Вид** — Appearance API на наших токенах. Payment Intents не используем: Adaptive Pricing есть только
+  у Checkout Sessions.
+- **Задачи:** BFF и контракты `v0.34.0` — `AURAT-0213`; веб — `AURAT-0212`, спека v2 `015`. Встроенная
+  форма работает, пока новый путь не готов. Снятие `hosted` / `embedded` — отдельной задачей.
+- **Согласие с Terms в live** нужно для всей сессии, включая кошельки. В sandbox его не проверить: там
+  нет ссылки на Terms. Перед live — проверка на sandbox со ссылкой на Terms.
