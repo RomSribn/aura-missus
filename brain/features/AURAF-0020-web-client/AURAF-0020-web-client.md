@@ -99,6 +99,8 @@ Source spec: `/Volumes/Work/personal/aura_web/design_handoff_aura_web/{README,ST
   - Back со страницы Stripe — из bfcache или свежей загрузкой — ведёт на `/checkout?…&cancelled=1`.
 - Строки 011 и 042 — следующими задачами (решение 4 `AURAT-0208`).
 - Встроенная форма вместо перехода на страницу Stripe — `AURAT-0211` и `AURAT-0212`.
+  - Смёржены 2026-11-12: BFF `6d9ce2b`, веб `0e7b88d`. Веб готов.
+  - Окончательное ✓ — после проверки владельцем на web-dev.
 
 | # | Src | Own | App | UI | BE | Del | Item |
 |---|-----|-----|-----|----|----|-----|------|
