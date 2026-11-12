@@ -60,6 +60,32 @@ Date: 2026-11-11
    - 404 на старте → «Top up in the Aura app»;
    - CSP — если `build.sh` проверяет заголовки, добавить проверку туда.
 
+## Уточнения от `AURAT-0211` (2026-11-12, до старта этой задачи)
+
+Пришли из сессии BFF. Черновик контракта может поменяться после одобрения спеки владельцем —
+сверить с тегом `v0.33.0`.
+
+- **Контракт.**
+  - Запрос: новое поле `ui: 'hosted' | 'embedded'`, по умолчанию `hosted`.
+  - Ответ — `discriminatedUnion('kind')`:
+    - `{ kind: 'redirect', redirectUrl }`;
+    - `{ kind: 'embedded', clientSecret, publicKey }`.
+  - Повтор того же `paymentId`, пока сессия открыта, отвечает тем же `clientSecret`. Тот же `paymentId`
+    с другим `ui` — `409 card_top_up_payment_conflict`.
+- **В режиме embedded веб обязан понимать и `kind: 'redirect'`.** Так BFF отвечает, если оплата уже
+  прошла и ждёт подтверждения (REVIEW, банковский метод). Тогда — переход на свою
+  `/checkout?payment=<id>`.
+- **Домен для кошельков.**
+  - `web-dev.aura-app.cc` зарегистрирован в sandbox: `pmd_1Uaxr3PzZXCl9nsG4HT7Sl34`. Apple Pay, Google
+    Pay, Link, PayPal, Klarna — `active`.
+  - Файл ассоциации Apple не нужен: проверку мерчанта Stripe делает сам.
+  - `web.aura-app.cc` — регистрировать в live вместе с воротами `AURAD-0023`.
+- **Apple Pay во встроенной форме** — только Safari / iOS 17+.
+- **Permissions-Policy.** У веба сейчас этого заголовка нет (`deploy/web/headers.conf`). По словам сессии
+  BFF, без `payment=(self "https://js.stripe.com" "https://checkout.stripe.com")` Chrome на Android не
+  покажет Google Pay. Сверить по документации Stripe в спеке.
+- Форму не класть во вложенный iframe.
+
 ## Решения для спеки (с рекомендацией)
 
 1. **Где форма.**
