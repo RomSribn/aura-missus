@@ -17,12 +17,21 @@
 
 **Правка термина** — здесь, `version` + 1. Копии:
 - **веб** своей копии пока не держит — принятие глоссария вебом (копия по `version`, проверка `avoid`) — `AURAT-0177`;
-- **BFF** держит только запретные формы `reader` / `reading` — для подписей советников (`AURAT-0173`) и текстов
-  персон (`AURAT-0184`): `src/modules/advisors/labels/glossary-avoid.spec-fixtures.ts` (`GLOSSARY_VERSION` = **3**
-  с `AURAT-0184`, «re-copy when its version changes»; `AURAT-0189` переносит копию в
-  `src/common/language/*.spec-fixtures.ts`). Её локальное расширение (fr `lectric`, it `lettric`, ro `cititoa`,
-  sl `bralk`, sl `bralc`, помечены `local`) вошло в **v4** — BFF перекопирует v4 без пометок `local` (передача
-  `AURAT-0180-009`). Перекопировать, когда меняется `avoid`.
+- **BFF** держит две копии v3:
+  - **запретные формы** `reader` / `reading` / `session` / `balance` — для проверки своих текстов: подписи и тексты
+    персон (`AURAT-0173`, `AURAT-0184`), тексты сезона (`AURAT-0189`):
+    `src/common/language/glossary-avoid.spec-fixtures.ts` (`GLOSSARY_VERSION` = **3**, «re-copy when its version
+    changes»). Плюс **локальное расширение** — женские `reader`, которых не ловят основы глоссария: fr `lectric`,
+    it `lettric`, ro `cititoa`, sl `bralk`, и sl `bralc` (помечены `local`). Расширение вошло в **v4**
+    (`AURAT-0180`): BFF перекопирует v4 без пометок `local` (передача `AURAT-0180-009`). Перекопировать, когда
+    меняется `avoid`;
+  - **глоссарий целиком** — для машинного перевода (`AURAT-0191`): правило обращения и термины найденного текста идут
+    в промпт, `avoid` — в проверку `glossary`. `src/modules/translation/glossary/app-glossary.json` — дословно
+    `scripts/i18n/glossary.json`, `GLOSSARY_VERSION` = **3** в `glossary.ts`; битая копия — отказ старта.
+    Перекопировать файл целиком при любой смене `version`.
+
+  Спека BFF сверяет копии: каждая нелокальная форма фикстуры есть в целой копии для того же термина и языка. Свести их
+  в одну — мелкой задачей после мёржа `AURAT-0191`.
 
 **Версии.** v2 — `AURAT-0155` (96 терминов). **v3** — `AURAT-0174`, 2026-11-07: el `psychic` «διορατικός» (женская
 «διορατική») вместо «μέντιουμ» — это `medium`, и у персон выходило «Μέντιουμ · Μέντιουμ». `avoid` не менялись, поэтому
