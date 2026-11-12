@@ -101,6 +101,8 @@ bff-dev / web-dev со Stripe sandbox. Веб принят. Подробност
 3. Закрыт вопрос НДС (`AURAI-0013` шаг 4).
 4. Прод-веб работает на `web.aura-app.cc` (`AURAD-0020`).
 5. Live-ключи и live-вебхук стоят в прод-BFF.
-6. В live включены Adaptive Pricing и методы оплаты.
+6. В live включены Adaptive Pricing и методы оплаты, в том числе Apple Pay, Google Pay и Link.
+7. Решён вопрос согласия с Terms в Elements: Stripe открыл Terms Element (доступ запрошен 2026-11-13) или
+   сделано своё согласие (`AURAD-0023`).
 
 После этого `main` BFF и веба — через merge gate.
