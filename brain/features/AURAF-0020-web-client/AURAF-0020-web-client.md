@@ -102,7 +102,8 @@ Source spec: `/Volumes/Work/personal/aura_web/design_handoff_aura_web/{README,ST
   Затем Stripe Elements — `AURAT-0213` и `AURAT-0212` v2 (`AURAD-0023`, поправка 2026-11-12).
   - Встроенная форма смёржена 2026-11-12: BFF `6d9ce2b`, веб `0e7b88d`.
   - Elements смёржены 2026-11-12: BFF `cd0975b` (выкачен на bff-dev), веб `9cf617d`.
-  - Окончательное ✓ — после выката web-dev и проверки в маноре.
+  - ✓ 2026-11-13: принято владельцем на web-dev — карта, Apple Pay, Google Pay, Link. Фикс ряда
+    кошельков — `6e811b2`. Банковские методы — `AURAT-0214`.
 
 | # | Src | Own | App | UI | BE | Del | Item |
 |---|-----|-----|-----|----|----|-----|------|

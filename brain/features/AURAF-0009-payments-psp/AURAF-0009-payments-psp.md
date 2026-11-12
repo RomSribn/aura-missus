@@ -78,8 +78,9 @@ the rail by `AURAD-0002` and `AURAD-0009`; a second rail is a separate decision.
 | `AURAT-0208` | `aura-web-manor` | настоящий `TopUpProvider` вместо фейка, флаг в прод-сборке, отмена, Back из bfcache, правило суммы, строки на 24 языках |
 | `AURAT-0209` | `aura-app-manor` | Terms §06–07, Privacy (Stripe), данные продавца (рег. код, адрес, телефон) |
 | `AURAT-0211` | `aura-bff-manor` | встроенный Checkout (`embedded_page`): `client_secret` и публичный ключ в ответе старта, контракты `v0.33.0`; после merge `AURAT-0207` (`AURAD-0023`, поправка 2026-11-11) |
-| `AURAT-0212` | `aura-web-manor` | форма Stripe в шторке Book без ухода с сайта, CSP для Stripe.js, строки на 24 языках; после merge `AURAT-0208` и `v0.33.0`; с 2026-11-12 — Elements (спека v2 `015`) |
+| `AURAT-0212` | `aura-web-manor` | форма Stripe в шторке Book без ухода с сайта, CSP для Stripe.js, строки на 24 языках; после merge `AURAT-0208` и `v0.33.0`; с 2026-11-12 — Elements (спека v2 `015`); ✓ принята 2026-11-13 |
 | `AURAT-0213` | `aura-bff-manor` | `ui: 'elements'` (Stripe Elements с Checkout Sessions), контракты `v0.34.0`, лимит частоты старта; пара `AURAT-0212` v2 (`AURAD-0023`, поправка 2026-11-12) |
+| `AURAT-0214` | `aura-web-manor` | банковские методы в шторке Book: уход в банк и возврат на `/checkout`, какие методы оставить в live; бэклог (владелец, 2026-11-13) |
 
 **2026-11-11:** `AURAT-0207` (`06754f5`) и `AURAT-0208` (`c7912bc`) смёржены и проверены владельцем на
 bff-dev / web-dev со Stripe sandbox. Веб принят. Подробности — «Состояние» в `AURAD-0023`.
@@ -94,6 +95,13 @@ bff-dev / web-dev со Stripe sandbox. Веб принят. Подробност
 - `AURAT-0212` v2: веб `develop` `9cf617d`.
 - Код проверен координатором: логика, FSD, читаемость.
 - Впереди — выкат web-dev и проверка в маноре. Подробности — «Состояние (2026-11-12)» в `AURAD-0023`.
+
+**2026-11-13:** веб `AURAT-0212` принят владельцем на web-dev («Принято»).
+- Работают карта, Apple Pay, Google Pay и Link.
+- Фикс ряда кошельков — веб `develop` `6e811b2` (`b339656`).
+- Задача закрыта, слот освобождён, missus `77f38ff`.
+- Банковские методы — отдельная задача `AURAT-0214`, она в бэклоге.
+- BFF `AURAT-0213` закрывается в своей вкладке.
 
 **Ворота live** (`AURAD-0023`):
 1. Stripe активировал аккаунт Silvermind OÜ.
