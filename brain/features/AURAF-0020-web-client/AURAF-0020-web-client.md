@@ -293,7 +293,7 @@ mt nl pl pt ro sk sl sv), i18next; язык — первый поддержив�
   приложения, тип и 8 МБ проверяются до отправки), поля как «Tell us who you are» (общая форма в
   `entities/user`), Save — только при изменениях, PATCH — только изменённое. Notifications — опт-ин
   рассылки (сохраняется сразу). Language — 24 языка, выбор хранит браузер. Privacy & legal — Terms,
-  Privacy, Refund policy → Terms (раздел 07), Delete account (как в приложении; 409 → Sessions).
+  Privacy, Refund policy → Terms §07 (`/terms/#s07`, `AURAT-0218`), Delete account (как в приложении; 409 → Sessions).
   Help — 3 вопроса с ответами в вебе, Contact support → `support@aura-app.cc`. «Coming soon» (данных
   в BFF нет): карта, Apple Pay, история платежей, промокод, напоминания о сессиях (решения
   владельца `AURAT-0136-006`). Фото — и в шапке.
