@@ -5,6 +5,9 @@ Status: accepted (**owner-ratified 2026-08-14**)
 
 **Supersedes `AURAD-0008`.** **Amends `AURAD-0002` in part.**
 
+**Amended by `AURAD-0025` (2026-11-18):** slots are offered only inside chatters' working hours —
+O1 of `AURAT-0018` (24/7 grid) no longer holds; O2 stands.
+
 ## Decision
 
 A paid session becomes a **scheduled, prepaid, private chat slot**, exactly as
